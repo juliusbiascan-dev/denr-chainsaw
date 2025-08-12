@@ -22,7 +22,7 @@ export async function EquipmentBarGraphContainer() {
       select: {
         createdAt: true,
       },
-    });
+    }) as { createdAt: Date }[];
 
     // Generate monthly data
     const monthlyData: EquipmentMonthlyData[] = [];
@@ -38,7 +38,7 @@ export async function EquipmentBarGraphContainer() {
       const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
       const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
 
-      const count = equipments.filter((eq) =>
+      const count = equipments.filter((eq: { createdAt: Date }) =>
         eq.createdAt >= monthStart && eq.createdAt <= monthEnd
       ).length;
 
