@@ -22,10 +22,10 @@ export const Social = () => {
     <div className="space-y-4">
       <div className="relative">
         <div className="absolute inset-0 flex items-center">
-          <span className="w-full border-t border-white/30" />
+          <span className="w-full border-t border-gray-300 dark:border-gray-600" />
         </div>
         <div className="relative flex justify-center text-xs uppercase">
-          <span className="bg-transparent px-2 text-white/70 font-medium">
+          <span className="bg-white dark:bg-gray-900 px-2 text-gray-500 dark:text-gray-400 font-medium">
             Or continue with
           </span>
         </div>
@@ -36,7 +36,7 @@ export const Social = () => {
           size="lg"
           variant="outline"
           onClick={() => onClick("google")}
-          className="flex-1 h-12 border-2 border-white/30 bg-white/10 backdrop-blur-sm hover:border-white/60 hover:bg-white/20 text-white transition-all duration-200"
+          className="flex-1 h-12 border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300 transition-all duration-200"
         >
           <FcGoogle className="h-5 w-5 mr-2" />
           Google
@@ -45,7 +45,7 @@ export const Social = () => {
           size="lg"
           variant="outline"
           onClick={() => onClick("github")}
-          className="flex-1 h-12 border-2 border-white/30 bg-white/10 backdrop-blur-sm hover:border-white/60 hover:bg-white/20 text-white transition-all duration-200"
+          className="flex-1 h-12 border border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500 text-gray-700 dark:text-gray-300 transition-all duration-200"
         >
           <FaGithub className="h-5 w-5 mr-2" />
           GitHub

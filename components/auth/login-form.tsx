@@ -85,108 +85,103 @@ export const LoginForm = () => {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto space-y-8">
+    <div className="w-full space-y-8">
       {/* Header */}
       <Header label="Welcome back" />
 
-      {/* Form Container with Glassmorphism */}
-      <div className="backdrop-blur-md bg-white/10 dark:bg-black/20 rounded-2xl border border-white/20 shadow-2xl p-8">
-        <div className="space-y-6">
-          <Form {...form}>
-            <form
-              onSubmit={form.handleSubmit(onSubmit)}
-              className="space-y-6"
-            >
-              <div className="space-y-4">
-                {showTwoFactor && (
+      {/* Form */}
+      <div className="space-y-6">
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="space-y-6"
+          >
+            <div className="space-y-4">
+              {showTwoFactor && (
+                <FormField
+                  control={form.control}
+                  name="code"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Two Factor Code</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          disabled={isPending}
+                          placeholder="123456"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              {!showTwoFactor && (
+                <>
                   <FormField
                     control={form.control}
-                    name="code"
+                    name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-white font-medium">Two Factor Code</FormLabel>
+                        <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Email</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             disabled={isPending}
-                            placeholder="123456"
-                            className="border-2 border-white/30 bg-white/10 backdrop-blur-sm text-white placeholder:text-white/60 focus:border-white/60 rounded-lg shadow-sm h-12"
+                            placeholder="Email"
+                            type="email"
                           />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
                     )}
                   />
-                )}
-                {!showTwoFactor && (
-                  <>
-                    <FormField
-                      control={form.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-white font-medium">Email</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              disabled={isPending}
-                              placeholder="Email"
-                              type="email"
-                              className="border-2 border-white/30 bg-white/10 backdrop-blur-sm text-white placeholder:text-white/60 focus:border-white/60 rounded-lg shadow-sm h-12"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-white font-medium">Password</FormLabel>
-                          <FormControl>
-                            <PasswordInput
-                              {...field}
-                              disabled={isPending}
-                              placeholder="******"
-                              className="border-2 border-white/30 bg-white/10 backdrop-blur-sm text-white placeholder:text-white/60 focus:border-white/60 rounded-lg shadow-sm h-12"
-                            />
-                          </FormControl>
-                          <Button
-                            size="sm"
-                            variant="link"
-                            asChild
-                            className="px-0 font-normal text-white/80 hover:text-white"
-                          >
-                            <Link href="/auth/reset">
-                              Forgot password?
-                            </Link>
-                          </Button>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </>
-                )}
-              </div>
-              <FormError message={error || urlError} />
-              <FormSuccess message={success} />
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Password</FormLabel>
+                        <FormControl>
+                          <PasswordInput
+                            {...field}
+                            disabled={isPending}
+                            placeholder="******"
+                          />
+                        </FormControl>
+                        <Button
+                          size="sm"
+                          variant="link"
+                          asChild
+                          className="px-0 font-normal text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                        >
+                          <Link href="/auth/reset">
+                            Forgot password?
+                          </Link>
+                        </Button>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </>
+              )}
+            </div>
+            <FormError message={error || urlError} />
+            <FormSuccess message={success} />
 
-              <Button
-                disabled={isPending}
-                type="submit"
-                className="w-full bg-gradient-to-r from-[#08933D] to-[#0C1B72] hover:from-[#0C1B72] hover:to-[#08933D] text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 ease-out shadow-lg hover:shadow-xl h-12"
-              >
-                {isPending && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
-                {showTwoFactor ? "Confirm" : "Login"}
-              </Button>
-            </form>
-          </Form>
+            <Button
+              disabled={isPending}
+              type="submit"
+              className="w-full bg-gradient-to-r from-[#08933D] to-[#0C1B72] hover:from-[#0C1B72] hover:to-[#08933D] text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 ease-out shadow-lg hover:shadow-xl h-12"
+            >
+              {isPending && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
+              {showTwoFactor ? "Confirm" : "Login"}
+            </Button>
+          </form>
+        </Form>
 
-          {/* Social Login */}
-          {/* {!showTwoFactor && <Social />} */}
-        </div>
+        {/* Social Login */}
+        {/* {!showTwoFactor && <Social />} */}
       </div>
 
       {/* Back Button */}

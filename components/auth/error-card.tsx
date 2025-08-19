@@ -16,16 +16,14 @@ export const ErrorCard = () => {
   }
 
   return (
-    <div className="w-full max-w-md mx-auto space-y-8">
+    <div className="w-full space-y-8">
       {/* Header */}
       <Header label="Oops! Something went wrong!" />
 
-      {/* Error Content Container with Glassmorphism */}
-      <div className="backdrop-blur-md bg-white/10 dark:bg-black/20 rounded-2xl border border-white/20 shadow-2xl p-8">
-        <div className="space-y-6">
-          <div className="flex items-center justify-center min-h-[120px]">
-            <FormError message={errorMessage} />
-          </div>
+      {/* Error Content */}
+      <div className="space-y-6">
+        <div className="flex items-center justify-center min-h-[120px]">
+          <FormError message={errorMessage} />
         </div>
       </div>
 

@@ -1,5 +1,4 @@
 import { Poppins } from "next/font/google";
-import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 const font = Poppins({
@@ -17,26 +16,21 @@ export const Header = ({
   className,
 }: HeaderProps) => {
   return (
-    <div className={cn("w-full flex flex-col gap-y-6 items-center justify-center text-center", className)}>
-      <div className="flex items-center space-x-3 sm:space-x-4">
-        <div className="relative">
-          <Image
-            src="/logo.jpg"
-            alt="DENR Logo"
-            width={48}
-            height={48}
-            className="rounded-full border-3 border-white/20 shadow-2xl sm:w-12 sm:h-12"
-          />
-          <div className="absolute -inset-1 bg-gradient-to-r from-[#08933D] to-[#0C1B72] rounded-full opacity-30 blur-sm"></div>
+    <div className={cn("w-full flex flex-col gap-y-4 items-center justify-center text-center", className)}>
+      <div className="flex items-center space-x-3">
+        <div className="w-12 h-12 bg-gradient-to-r from-[#08933D] to-[#0C1B72] rounded-lg flex items-center justify-center">
+          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
+          </svg>
         </div>
         <h1 className={cn(
-          "text-2xl sm:text-3xl font-bold bg-gradient-to-r from-white to-white/90 text-transparent bg-clip-text drop-shadow-lg",
+          "text-2xl font-bold text-gray-900 dark:text-white",
           font.className,
         )}>
           Chainsaw Registry
         </h1>
       </div>
-      <p className="text-white/90 text-sm sm:text-base max-w-sm font-medium">
+      <p className="text-gray-600 dark:text-gray-300 text-sm max-w-sm">
         {label}
       </p>
     </div>

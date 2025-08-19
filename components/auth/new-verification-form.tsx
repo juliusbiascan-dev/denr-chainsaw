@@ -40,25 +40,23 @@ export const NewVerificationForm = () => {
   }, [onSubmit]);
 
   return (
-    <div className="w-full max-w-md mx-auto space-y-8">
+    <div className="w-full space-y-8">
       {/* Header */}
       <Header label="Confirming your verification" />
 
-      {/* Content Container with Glassmorphism */}
-      <div className="backdrop-blur-md bg-white/10 dark:bg-black/20 rounded-2xl border border-white/20 shadow-2xl p-8">
-        <div className="space-y-6">
-          <div className="flex items-center w-full justify-center min-h-[120px]">
-            {!success && !error && (
-              <div className="flex flex-col items-center space-y-4">
-                <BeatLoader color="#ffffff" />
-                <p className="text-white/90 text-sm font-medium">Verifying your account...</p>
-              </div>
-            )}
-            <FormSuccess message={success} />
-            {!success && (
-              <FormError message={error} />
-            )}
-          </div>
+      {/* Content */}
+      <div className="space-y-6">
+        <div className="flex items-center w-full justify-center min-h-[120px]">
+          {!success && !error && (
+            <div className="flex flex-col items-center space-y-4">
+              <BeatLoader color="currentColor" className="text-gray-600 dark:text-gray-300" />
+              <p className="text-gray-600 dark:text-gray-300 text-sm font-medium">Verifying your account...</p>
+            </div>
+          )}
+          <FormSuccess message={success} />
+          {!success && (
+            <FormError message={error} />
+          )}
         </div>
       </div>
 
