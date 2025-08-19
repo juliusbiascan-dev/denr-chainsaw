@@ -9,6 +9,9 @@ export const searchParams = {
   page: parseAsInteger.withDefault(1),
   perPage: parseAsInteger.withDefault(10),
   name: parseAsString,
+  brand: parseAsString,
+  model: parseAsString,
+  serialNumber: parseAsString,
   fuelType: parseAsString,
   intendedUse: parseAsString
   // advanced filter

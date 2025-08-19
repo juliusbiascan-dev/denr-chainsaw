@@ -11,10 +11,14 @@ export default async function EquipmentListingPage({ }: EquipmentListingPage) {
   try {
     // Showcasing the use of search params cache in nested RSCs
     const page = searchParamsCache.get('page');
-    const search = searchParamsCache.get('name');
     const pageLimit = searchParamsCache.get('perPage');
     const fuelType = searchParamsCache.get('fuelType');
     const intendedUse = searchParamsCache.get('intendedUse');
+
+    // Get individual column search filters
+    const brand = searchParamsCache.get('brand');
+    const model = searchParamsCache.get('model');
+    const serialNumber = searchParamsCache.get('serialNumber');
 
     // Parse filter categories if they exist
     let parsedCategories: string[] = [];
@@ -28,7 +32,9 @@ export default async function EquipmentListingPage({ }: EquipmentListingPage) {
     const filters = {
       page: page || 1,
       limit: pageLimit || 10,
-      ...(search && { search }),
+      ...(brand && { brand }),
+      ...(model && { model }),
+      ...(serialNumber && { serialNumber }),
       ...(parsedCategories.length > 0 && { categories: parsedCategories })
     };
 

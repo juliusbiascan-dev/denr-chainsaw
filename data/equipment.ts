@@ -32,21 +32,48 @@ export const getEquipments = async ({
   page = 1,
   limit = 10,
   search,
-  categories
+  categories,
+  brand,
+  model,
+  serialNumber
 }: {
   page?: number;
   limit?: number;
   search?: string;
   categories?: string[];
+  brand?: string;
+  model?: string;
+  serialNumber?: string;
 }) => {
   try {
-    console.log('getEquipments called with:', { page, limit, search, categories });
+    console.log('getEquipments called with:', { page, limit, search, categories, brand, model, serialNumber });
 
     // Build the where clause for filtering
     const whereClause: any = {};
 
-    // Handle search across multiple fields
-    if (search) {
+    // Handle individual column filters (preferred over general search)
+    if (brand || model || serialNumber) {
+      whereClause.AND = [];
+
+      if (brand) {
+        whereClause.AND.push({
+          brand: { contains: brand, mode: 'insensitive' }
+        });
+      }
+
+      if (model) {
+        whereClause.AND.push({
+          model: { contains: model, mode: 'insensitive' }
+        });
+      }
+
+      if (serialNumber) {
+        whereClause.AND.push({
+          serialNumber: { contains: serialNumber, mode: 'insensitive' }
+        });
+      }
+    } else if (search) {
+      // Fallback to general search across multiple fields
       whereClause.OR = [
         { brand: { contains: search, mode: 'insensitive' } },
         { model: { contains: search, mode: 'insensitive' } },
@@ -66,7 +93,9 @@ export const getEquipments = async ({
       console.log('Filtered categories:', { fuelTypeCategories, useTypeCategories });
 
       if (fuelTypeCategories.length > 0 || useTypeCategories.length > 0) {
-        whereClause.AND = [];
+        if (!whereClause.AND) {
+          whereClause.AND = [];
+        }
 
         if (fuelTypeCategories.length > 0) {
           whereClause.AND.push({
