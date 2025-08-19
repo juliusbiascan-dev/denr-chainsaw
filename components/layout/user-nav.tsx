@@ -15,10 +15,29 @@ import { useRouter } from 'next/navigation';
 import { signOut, useSession } from "next-auth/react"
 
 export function UserNav() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
   const user = session?.user || null;
 
   const router = useRouter();
+
+  // Show loading state while session is loading
+  if (status === "loading") {
+    return (
+      <Button variant='ghost' className='relative h-8 w-8 rounded-full'>
+        <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+      </Button>
+    );
+  }
+
+  // Show loading state while session is being updated
+  if (status === "authenticated" && !user?.name) {
+    return (
+      <Button variant='ghost' className='relative h-8 w-8 rounded-full'>
+        <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />
+      </Button>
+    );
+  }
+
   if (user) {
     return (
       <DropdownMenu>
@@ -44,7 +63,7 @@ export function UserNav() {
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-          <DropdownMenuGroup>
+          {/* <DropdownMenuGroup>
             <DropdownMenuItem onClick={() => router.push('/dashboard/profile')}>
               Profile
             </DropdownMenuItem>
@@ -52,13 +71,15 @@ export function UserNav() {
             <DropdownMenuItem>Settings</DropdownMenuItem>
             <DropdownMenuItem>New Team</DropdownMenuItem>
           </DropdownMenuGroup>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem>
-            {/* <SignOutButton redirectUrl='/auth/sign-in' /> */}
-            <Button onClick={() => signOut()}>Sign Out</Button>
+          <DropdownMenuSeparator /> */}
+          <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/auth/login' })}>
+            Sign Out
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
     );
   }
+
+  // Return null if no user (not authenticated)
+  return null;
 }

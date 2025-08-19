@@ -4,6 +4,7 @@ import Header from '@/components/layout/header';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';
 import type { Metadata } from 'next';
 import { cookies } from 'next/headers';
+import { SessionRefreshWrapper } from '@/components/session-refresh-wrapper';
 
 export const metadata: Metadata = {
   title: 'DENR Equipment Dashboard',
@@ -21,13 +22,15 @@ export default async function DashboardLayout({
   return (
     <>
       <SidebarProvider defaultOpen={defaultOpen}>
-        <AppSidebar />
-        <SidebarInset>
-          <Header />
-          {/* page main content */}
-          {children}
-          {/* page main content ends */}
-        </SidebarInset>
+        <SessionRefreshWrapper>
+          <AppSidebar />
+          <SidebarInset>
+            <Header />
+            {/* page main content */}
+            {children}
+            {/* page main content ends */}
+          </SidebarInset>
+        </SessionRefreshWrapper>
       </SidebarProvider>
     </>
   );

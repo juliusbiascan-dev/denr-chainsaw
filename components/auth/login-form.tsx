@@ -63,6 +63,10 @@ export const LoginForm = () => {
           if (data?.success) {
             form.reset();
             setSuccess(data.success);
+            // Force a page refresh after successful login to ensure session is updated
+            setTimeout(() => {
+              window.location.href = callbackUrl || '/dashboard';
+            }, 1000);
           }
 
           if (data?.twoFactor) {

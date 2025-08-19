@@ -52,7 +52,7 @@ import { useSession } from "next-auth/react"
 import { Button } from '../ui/button';
 
 export default function AppSidebar() {
-  const { data: session } = useSession()
+  const { data: session, status } = useSession()
 
   const user = session?.user || null;
   const pathname = usePathname();
@@ -155,12 +155,16 @@ export default function AppSidebar() {
                   size='lg'
                   className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
                 >
-                  {user && (
+                  {status === "loading" || (status === "authenticated" && !user?.name) ? (
+                    <div className="h-8 w-8 rounded-lg bg-muted animate-pulse" />
+                  ) : user ? (
                     <UserAvatarProfile
                       className='h-8 w-8 rounded-lg'
                       showInfo
                       user={{ name: user.name, email: user.email, image: user.image }}
                     />
+                  ) : (
+                    <div className="h-8 w-8 rounded-lg bg-muted" />
                   )}
                   <IconChevronsDown className='ml-auto size-4' />
                 </SidebarMenuButton>
@@ -173,16 +177,26 @@ export default function AppSidebar() {
               >
                 <DropdownMenuLabel className='p-0 font-normal'>
                   <div className='px-1 py-1.5'>
-                    {user && (
+                    {status === "loading" || (status === "authenticated" && !user?.name) ? (
+                      <div className="flex items-center space-x-2">
+                        <div className="h-8 w-8 rounded-lg bg-muted animate-pulse" />
+                        <div className="space-y-1">
+                          <div className="h-4 w-24 bg-muted animate-pulse rounded" />
+                          <div className="h-3 w-32 bg-muted animate-pulse rounded" />
+                        </div>
+                      </div>
+                    ) : user ? (
                       <UserAvatarProfile
                         className='h-8 w-8 rounded-lg'
                         showInfo
                         user={user}
                       />
+                    ) : (
+                      <div className="text-sm text-muted-foreground">Not signed in</div>
                     )}
                   </div>
                 </DropdownMenuLabel>
-                <DropdownMenuSeparator />
+                {/* <DropdownMenuSeparator />
 
                 <DropdownMenuGroup>
                   <DropdownMenuItem
@@ -200,12 +214,14 @@ export default function AppSidebar() {
                     Notifications
                   </DropdownMenuItem>
                 </DropdownMenuGroup>
+          */}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem>
-                  <IconLogout className='mr-2 h-4 w-4' />
-                  {/* <SignOutButton redirectUrl='/auth/sign-in' /> */}
-                  <Button variant={"ghost"} onClick={() => signOut()}>Sign Out</Button>
-                </DropdownMenuItem>
+                {user && (
+                  <DropdownMenuItem onClick={() => signOut({ callbackUrl: '/auth/login' })}>
+                    <IconLogout className='mr-2 h-4 w-4' />
+                    Sign Out
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </SidebarMenuItem>
