@@ -143,16 +143,16 @@ export const getEquipmentUseTypeData = async () => {
       OTHER: 'Other Uses'
     };
 
-    // Convert to chart data format with colors
+    // Convert to chart data format with distinct colors for each purpose
     const colors = [
-      'var(--primary)',
-      'hsl(var(--primary) / 0.8)',
-      'hsl(var(--primary) / 0.6)',
-      'hsl(var(--primary) / 0.4)',
-      'hsl(var(--primary) / 0.2)',
-      'hsl(var(--secondary))',
-      'hsl(var(--secondary) / 0.8)',
-      'hsl(var(--secondary) / 0.6)'
+      'hsl(220, 70%, 50%)',   // Blue
+      'hsl(120, 70%, 45%)',   // Green
+      'hsl(30, 90%, 55%)',    // Orange
+      'hsl(280, 70%, 60%)',   // Purple
+      'hsl(0, 70%, 55%)',     // Red
+      'hsl(180, 70%, 45%)',   // Teal
+      'hsl(60, 80%, 55%)',    // Yellow
+      'hsl(340, 70%, 55%)'    // Pink
     ];
 
     const data = Object.entries(useTypeCount).map(

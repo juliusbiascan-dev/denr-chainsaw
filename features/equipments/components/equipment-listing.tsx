@@ -1,7 +1,7 @@
 
 import { Equipment } from '@/constants/data';
 import { searchParamsCache } from '@/lib/searchparams';
-import { EquipmentTable } from './equipments-tables';
+import EquipmentListingWrapper from './equipment-listing-wrapper';
 import { columns } from './equipments-tables/columns';
 import { getEquipments } from '@/data/equipment';
 
@@ -83,8 +83,8 @@ export default async function EquipmentListingPage({ }: EquipmentListingPage) {
     });
 
     return (
-      <EquipmentTable
-        data={equipments}
+      <EquipmentListingWrapper
+        initialData={equipments}
         totalItems={totalEquipments}
         columns={columns}
       />

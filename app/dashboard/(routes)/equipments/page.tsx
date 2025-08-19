@@ -4,6 +4,7 @@ import { Heading } from '@/components/ui/heading';
 import { Separator } from '@/components/ui/separator';
 import { DataTableSkeleton } from '@/components/ui/table/data-table-skeleton';
 import EquipmentListingPage from '@/features/equipments/components/equipment-listing';
+import { EquipmentMobileSkeleton } from '@/features/equipments/components/equipment-mobile-skeleton';
 import { searchParamsCache, serialize } from '@/lib/searchparams';
 import { cn } from '@/lib/utils';
 import { IconPlus } from '@tabler/icons-react';
@@ -46,7 +47,14 @@ export default async function Page(props: pageProps) {
         <Suspense
           key={key}
           fallback={
-            <DataTableSkeleton columnCount={5} rowCount={8} filterCount={2} />
+            <div className="w-full space-y-4">
+              {/* Desktop View Skeleton */}
+              <div className="hidden md:block flex-1 w-full min-h-[400px]">
+                <DataTableSkeleton columnCount={5} rowCount={8} filterCount={2} />
+              </div>
+              {/* Mobile View Skeleton */}
+              <EquipmentMobileSkeleton cardCount={8} />
+            </div>
           }
         >
           <EquipmentListingPage />
