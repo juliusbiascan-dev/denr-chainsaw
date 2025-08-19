@@ -84,24 +84,29 @@ model TwoFactorConfirmation {
 }
 
 model Equipment {
-  id                String   @id @default(cuid())
+  id                       String  @id @default(cuid())
+  ownerFirstName           String //Owner's First Name
+  ownerLastName            String //Owner's Last Name
+  ownerMiddleName          String //Owner's Middle Name
+  ownerAddress             String //Owner's Address
+  ownerContactNumber       String? //Owner's Contact Number
+  ownerEmail               String? //Owner's Email
+  ownerPreferContactMethod String? //Owner's Preferred Contact Method
+  ownerIdUrl               String? //Owner's ID URL
+
   brand             String // Chainsaw Brand
   model             String // Chainsaw Model
   serialNumber      String   @unique // Chainsaw Serial Number
-  guidBarLength     Float // Guide Bar Length in inches
-  horsePower        Float // Horse Power
+  guidBarLength     Float // Guide Bar Length in inches (in inches)
+  horsePower        Float // Horse Power (in horsepower)
   fuelType          FuelType // Fuel type (Gas, Diesel, Electric, Other)
   dateAcquired      DateTime // Date of Acquisition
-  stencilOfSerialNo String // Stencil of Serial Number
+  stencilOfSerialNo String // Stencil of Serial Number (if available)
   otherInfo         String // Document/proof of ownership
   intendedUse       UseType // Intended use of chainsaw
   isNew             Boolean // New Chainsaw or renewal of registration
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
-
-  // Relations could be added here for owner information
-  // userId String
-  // user   User   @relation(fields: [userId], references: [id])
 
   // Optional: documents/attachments
   documents Document[]

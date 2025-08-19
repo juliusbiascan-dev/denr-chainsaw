@@ -42,6 +42,9 @@ import { EquipmentSchema } from '@/schemas/equipment';
 import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
 import { Textarea } from '@/components/ui/textarea';
+import { FileUploader } from '@/components/file-uploader';
+import { UploadButton } from '@/lib/uploadthing';
+import { toast } from 'sonner';
 
 export default function EquipmentForm({
   initialData,
@@ -54,10 +57,22 @@ export default function EquipmentForm({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
+  const [ownerIdUrl, setOwnerIdUrl] = useState<string>(initialData?.ownerIdUrl || '');
 
   const isEditing = !!initialData;
 
   const defaultValues = {
+    // Owner Information
+    ownerFirstName: initialData?.ownerFirstName || '',
+    ownerLastName: initialData?.ownerLastName || '',
+    ownerMiddleName: initialData?.ownerMiddleName || '',
+    ownerAddress: initialData?.ownerAddress || '',
+    ownerContactNumber: initialData?.ownerContactNumber || '',
+    ownerEmail: initialData?.ownerEmail || '',
+    ownerPreferContactMethod: initialData?.ownerPreferContactMethod || '',
+    ownerIdUrl: initialData?.ownerIdUrl || '',
+
+    // Equipment Information
     brand: initialData?.brand || '',
     model: initialData?.model || '',
     serialNumber: initialData?.serialNumber || '',
@@ -76,18 +91,26 @@ export default function EquipmentForm({
     defaultValues
   });
 
+
+
   function onSubmit(values: z.infer<typeof EquipmentSchema>) {
     setError('');
     setSuccess('');
+
+    // Include the uploaded file URL in the form data
+    const formData = {
+      ...values,
+      ownerIdUrl: ownerIdUrl
+    };
 
     startTransition(async () => {
       try {
         let response;
 
         if (isEditing && initialData) {
-          response = await updateEquipmentAction(initialData.id, values);
+          response = await updateEquipmentAction(initialData.id, formData);
         } else {
-          response = await createEquipmentAction(values);
+          response = await createEquipmentAction(formData);
         }
 
         if (response.success) {
@@ -118,105 +141,111 @@ export default function EquipmentForm({
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
-            <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
-              <FormField
-                control={form.control}
-                name='brand'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Brand</FormLabel>
-                    <FormControl>
-                      <Input placeholder='Enter chainsaw brand' {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name='model'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Model</FormLabel>
-                    <FormControl>
-                      <Input placeholder='Enter chainsaw model' {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name='serialNumber'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Serial Number</FormLabel>
-                    <FormControl>
-                      <Input placeholder='Enter serial number' {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name='guidBarLength'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Guide Bar Length (inches)</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder='Enter guide bar length'
-                        {...field}
-                        onChange={e => field.onChange(parseFloat(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name='horsePower'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Horse Power</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        placeholder='Enter horse power'
-                        {...field}
-                        onChange={e => field.onChange(parseFloat(e.target.value))}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name='fuelType'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Fuel Type</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+            {/* Owner Information Section */}
+            <div className='space-y-6'>
+              <h3 className='text-lg font-semibold text-foreground'>Owner Information</h3>
+              <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
+                <FormField
+                  control={form.control}
+                  name='ownerFirstName'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>First Name</FormLabel>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder='Select fuel type' />
-                        </SelectTrigger>
+                        <Input placeholder='Enter first name' {...field} />
                       </FormControl>
-                      <SelectContent>
-                        <SelectItem value="GAS">Gas</SelectItem>
-                        <SelectItem value="DIESEL">Diesel</SelectItem>
-                        <SelectItem value="ELECTRIC">Electric</SelectItem>
-                        <SelectItem value="OTHER">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name='ownerLastName'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Last Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder='Enter last name' {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name='ownerMiddleName'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Middle Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder='Enter middle name' {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name='ownerContactNumber'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Contact Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder='Enter contact number' {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name='ownerEmail'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Email Address</FormLabel>
+                      <FormControl>
+                        <Input type='email' placeholder='Enter email address' {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name='ownerPreferContactMethod'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Preferred Contact Method</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder='Select preferred contact method' />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="PHONE">Phone</SelectItem>
+                          <SelectItem value="EMAIL">Email</SelectItem>
+                          <SelectItem value="SMS">SMS</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormField
+                control={form.control}
+                name='ownerAddress'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Address</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder='Enter complete address'
+                        className='resize-none'
+                        {...field}
+                      />
+                    </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -224,169 +253,272 @@ export default function EquipmentForm({
 
               <FormField
                 control={form.control}
-                name='dateAcquired'
+                name='ownerIdUrl'
                 render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Date Acquired</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* <FormField
-                control={form.control}
-                name="dateAcquired"
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Date Acquired</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-[240px] pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) =>
-                            date < new Date(new Date().setHours(0, 0, 0, 0))
+                  <FormItem>
+                    <FormLabel>Owner ID Image</FormLabel>
+                    <FormControl>
+                      <UploadButton
+                        endpoint="imageUploader"
+                        onClientUploadComplete={(res: any) => {
+                          if (res && res[0]) {
+                            setOwnerIdUrl(res[0].url);
+                            toast.success("ID image uploaded successfully!");
                           }
-                          captionLayout="dropdown"
-                          fromYear={new Date().getFullYear()}
-                          toYear={new Date().getFullYear() + 50}
-                          defaultMonth={field.value || new Date()}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormDescription>
-                      Your valid until date is used to determine the equipment's availability.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              /> */}
-              <FormField
-                control={form.control}
-                name='stencilOfSerialNo'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Stencil of Serial Number</FormLabel>
-                    <FormControl>
-                      <Input placeholder='Enter stencil of serial number' {...field} />
+                        }}
+                        onUploadError={(error: Error) => {
+                          console.error("Upload error:", error);
+                          toast.error(`Error uploading image: ${error.message}`);
+                        }}
+                        onUploadBegin={(fileName: string) => {
+                          console.log("Upload beginning:", fileName);
+                        }}
+                      />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name='intendedUse'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Intended Use</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder='Select intended use' />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="WOOD_PROCESSING">Wood Processing</SelectItem>
-                        <SelectItem value="TREE_CUTTING">Tree Cutting</SelectItem>
-                        <SelectItem value="LEGAL_PURPOSES">Legal Purposes</SelectItem>
-                        <SelectItem value="OFFICIAL_TREE_CUTTING">Official Tree Cutting</SelectItem>
-                        <SelectItem value="OTHER">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    {ownerIdUrl && (
+                      <div className='mt-2'>
+                        <p className='text-sm text-muted-foreground'>Uploaded ID Image:</p>
+                        <img
+                          src={ownerIdUrl}
+                          alt="Owner ID"
+                          className='mt-1 h-20 w-auto rounded border'
+                        />
+                      </div>
+                    )}
+                    <FormDescription>
+                      Upload a clear image of the owner's ID (Government ID, Driver's License, etc.)
+                    </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
 
-            <FormField
-              control={form.control}
-              name='otherInfo'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Other Information</FormLabel>
-                  <FormControl>
+            {/* Equipment Information Section */}
+            <div className='space-y-6'>
+              <h3 className='text-lg font-semibold text-foreground'>Equipment Information</h3>
+              <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
+                <FormField
+                  control={form.control}
+                  name='brand'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Brand</FormLabel>
+                      <FormControl>
+                        <Input placeholder='Enter chainsaw brand' {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name='model'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Model</FormLabel>
+                      <FormControl>
+                        <Input placeholder='Enter chainsaw model' {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-                    <Textarea
-                      placeholder='Enter other information (Description, Color , etc.)'
-                      className='resize-none'
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name='serialNumber'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Serial Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder='Enter serial number' {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
 
-            <FormField
-              control={form.control}
-              name='isNew'
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
-                  <div className="space-y-0.5">
-                    <FormLabel>Registration Type</FormLabel>
-                    <FormDescription>
-                      Is this a new chainsaw registration?
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
+                <FormField
+                  control={form.control}
+                  name='guidBarLength'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Guide Bar Length (inches)</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder='Enter guide bar length'
+                          {...field}
+                          onChange={e => field.onChange(parseFloat(e.target.value))}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='horsePower'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Horse Power</FormLabel>
+                      <FormControl>
+                        <Input
+                          type="number"
+                          placeholder='Enter horse power'
+                          {...field}
+                          onChange={e => field.onChange(parseFloat(e.target.value))}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='fuelType'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Fuel Type</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder='Select fuel type' />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="GAS">Gas</SelectItem>
+                          <SelectItem value="DIESEL">Diesel</SelectItem>
+                          <SelectItem value="ELECTRIC">Electric</SelectItem>
+                          <SelectItem value="OTHER">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='dateAcquired'
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Date Acquired</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='stencilOfSerialNo'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Stencil of Serial Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder='Enter stencil of serial number' {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='intendedUse'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Intended Use</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder='Select intended use' />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="WOOD_PROCESSING">Wood Processing</SelectItem>
+                          <SelectItem value="TREE_CUTTING">Tree Cutting</SelectItem>
+                          <SelectItem value="LEGAL_PURPOSES">Legal Purposes</SelectItem>
+                          <SelectItem value="OFFICIAL_TREE_CUTTING">Official Tree Cutting</SelectItem>
+                          <SelectItem value="OTHER">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name='otherInfo'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Other Information</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder='Enter other information (Description, Color , etc.)'
+                        className='resize-none'
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='isNew'
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
+                    <div className="space-y-0.5">
+                      <FormLabel>Registration Type</FormLabel>
+                      <FormDescription>
+                        Is this a new chainsaw registration?
+                      </FormDescription>
+                    </div>
+                    <FormControl>
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                  </FormItem>
+                )}
+              />
+            </div>
 
             <FormError message={error} />
             <FormSuccess message={success} />

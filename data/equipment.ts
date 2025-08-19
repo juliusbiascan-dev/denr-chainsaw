@@ -183,6 +183,17 @@ export const getEquipmentById = async (id: string) => {
 }
 
 export const createEquipment = async (data: {
+  // Owner Information
+  ownerFirstName?: string;
+  ownerLastName?: string;
+  ownerMiddleName?: string;
+  ownerAddress?: string;
+  ownerContactNumber?: string;
+  ownerEmail?: string;
+  ownerPreferContactMethod?: string;
+  ownerIdUrl?: string;
+
+  // Equipment Information
   brand: string;
   model: string;
   serialNumber: string;
@@ -208,6 +219,17 @@ export const createEquipment = async (data: {
     // Create a new equipment entry in the database
     const newEquipment = await db.equipment.create({
       data: {
+        // Owner Information
+        ownerFirstName: data.ownerFirstName?.trim() || '',
+        ownerLastName: data.ownerLastName?.trim() || '',
+        ownerMiddleName: data.ownerMiddleName?.trim() || '',
+        ownerAddress: data.ownerAddress?.trim() || '',
+        ownerContactNumber: data.ownerContactNumber?.trim() || '',
+        ownerEmail: data.ownerEmail?.trim() || '',
+        ownerPreferContactMethod: data.ownerPreferContactMethod?.trim() || '',
+        ownerIdUrl: data.ownerIdUrl?.trim() || '',
+
+        // Equipment Information
         brand: data.brand.trim(),
         model: data.model.trim(),
         serialNumber: data.serialNumber.trim(),
@@ -241,6 +263,17 @@ export const createEquipment = async (data: {
 }
 
 export const updateEquipment = async (id: string, data: {
+  // Owner Information
+  ownerFirstName?: string;
+  ownerLastName?: string;
+  ownerMiddleName?: string;
+  ownerAddress?: string;
+  ownerContactNumber?: string;
+  ownerEmail?: string;
+  ownerPreferContactMethod?: string;
+  ownerIdUrl?: string;
+
+  // Equipment Information
   brand?: string;
   model?: string;
   serialNumber?: string;
@@ -269,6 +302,18 @@ export const updateEquipment = async (id: string, data: {
 
     // Prepare update data (only include defined fields)
     const updateData: any = {};
+
+    // Owner Information
+    if (data.ownerFirstName !== undefined) updateData.ownerFirstName = data.ownerFirstName.trim();
+    if (data.ownerLastName !== undefined) updateData.ownerLastName = data.ownerLastName.trim();
+    if (data.ownerMiddleName !== undefined) updateData.ownerMiddleName = data.ownerMiddleName.trim();
+    if (data.ownerAddress !== undefined) updateData.ownerAddress = data.ownerAddress.trim();
+    if (data.ownerContactNumber !== undefined) updateData.ownerContactNumber = data.ownerContactNumber.trim();
+    if (data.ownerEmail !== undefined) updateData.ownerEmail = data.ownerEmail.trim();
+    if (data.ownerPreferContactMethod !== undefined) updateData.ownerPreferContactMethod = data.ownerPreferContactMethod.trim();
+    if (data.ownerIdUrl !== undefined) updateData.ownerIdUrl = data.ownerIdUrl.trim();
+
+    // Equipment Information
     if (data.brand !== undefined) updateData.brand = data.brand.trim();
     if (data.model !== undefined) updateData.model = data.model.trim();
     if (data.serialNumber !== undefined) updateData.serialNumber = data.serialNumber.trim();

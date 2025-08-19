@@ -6,7 +6,8 @@
 export const publicRoutes = [
   "/",
   "/auth/new-verification",
-  "/auth/logout"
+  "/auth/logout",
+  "/api/uploadthing"
 ];
 
 /**
@@ -15,7 +16,8 @@ export const publicRoutes = [
  * @type {string[]}
  */
 export const publicRoutePatterns = [
-  "/equipments/"
+  "/equipments/",
+  "/api/uploadthing/"
 ];
 
 /**

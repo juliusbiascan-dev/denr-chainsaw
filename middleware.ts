@@ -18,9 +18,15 @@ export default auth((req) => {
   const isLoggedIn = !!req.auth;
 
   const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
+  const isUploadThingRoute = nextUrl.pathname.startsWith("/api/uploadthing");
   const isPublicRoute = publicRoutes.includes(nextUrl.pathname) ||
     publicRoutePatterns.some(pattern => nextUrl.pathname.startsWith(pattern));
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
+
+  // Allow UploadThing routes to pass through
+  if (isUploadThingRoute) {
+    return;
+  }
 
   if (isApiAuthRoute) {
     return;
@@ -51,5 +57,9 @@ export default auth((req) => {
 
 // Optionally, don't invoke Middleware on some paths
 export const config = {
-  matcher: ['/((?!.+\\.[\\w]+$|_next).*)', '/', '/(api|trpc)(.*)'],
+  matcher: [
+    '/((?!.+\\.[\\w]+$|_next).*)',
+    '/',
+    '/(api|trpc)(.*)'
+  ],
 }

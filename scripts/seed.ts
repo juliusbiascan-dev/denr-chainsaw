@@ -45,6 +45,17 @@ const seed = async () => {
 
       const equipment = await prisma.equipment.create({
         data: {
+          // Owner Information
+          ownerFirstName: `Owner${i + 1}`,
+          ownerLastName: `Smith${i + 1}`,
+          ownerMiddleName: `M${i + 1}`,
+          ownerAddress: `${Math.floor(Math.random() * 9999) + 1} Main St, City ${i + 1}`,
+          ownerContactNumber: `+63${Math.floor(Math.random() * 900000000) + 100000000}`,
+          ownerEmail: `owner${i + 1}@example.com`,
+          ownerPreferContactMethod: Math.random() > 0.5 ? 'PHONE' : 'EMAIL',
+          ownerIdUrl: `https://example.com/ids/owner${i + 1}.jpg`,
+
+          // Equipment Information
           brand: randomBrand.brand,
           model: randomModel,
           serialNumber: generateSerialNumber(),
