@@ -15,14 +15,14 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { CardWrapper } from "@/components/auth/card-wrapper"
 import { Button } from "@/components/ui/button";
 import { FormError } from "@/components/form-error";
 import { FormSuccess } from "@/components/form-success";
 import { reset } from "@/actions/reset";
 import React from "react";
-import Image from "next/image";
 import { Icons } from "../icons";
+import { Header } from "./header";
+import { BackButton } from "./back-button";
 
 export const ResetForm = () => {
   const [error, setError] = useState<string | undefined>("");
@@ -50,63 +50,61 @@ export const ResetForm = () => {
   };
 
   return (
-    <CardWrapper
-      headerLabel="Forgot your password?"
-      headerComponent={
-        <div className="flex items-center justify-center space-x-2 flex-wrap">
-          <Image
-            src="/logo.jpg"
-            alt="DENR Logo"
-            width={40}
-            height={40}
-            className="rounded-full border-2 border-[#08933D] sm:w-12 sm:h-12"
-          />
-          <span className="text-xl sm:text-2xl font-bold text-[#08933D] dark:text-white">
-            Password Reset
-          </span>
+    <div className="w-full max-w-md mx-auto space-y-8">
+      {/* Header */}
+      <Header label="Forgot your password?" />
+
+      {/* Form Container with Glassmorphism */}
+      <div className="backdrop-blur-md bg-white/10 dark:bg-black/20 rounded-2xl border border-white/20 shadow-2xl p-8">
+        <div className="space-y-6">
+          <Form {...form}>
+            <form
+              onSubmit={form.handleSubmit(onSubmit)}
+              className="space-y-6"
+            >
+              <div className="space-y-4">
+                <FormField
+                  control={form.control}
+                  name="email"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="text-white font-medium">Email</FormLabel>
+                      <FormControl>
+                        <Input
+                          {...field}
+                          disabled={isPending}
+                          placeholder="john.doe@example.com"
+                          type="email"
+                          className="border-2 border-white/30 bg-white/10 backdrop-blur-sm text-white placeholder:text-white/60 focus:border-white/60 rounded-lg shadow-sm h-12"
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormError message={error} />
+              <FormSuccess message={success} />
+              <Button
+                disabled={isPending}
+                type="submit"
+                className="w-full bg-gradient-to-r from-[#08933D] to-[#0C1B72] hover:from-[#0C1B72] hover:to-[#08933D] text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 ease-out shadow-lg hover:shadow-xl h-12"
+              >
+                {isPending && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
+                Send reset email
+              </Button>
+            </form>
+          </Form>
         </div>
-      }
-      backButtonLabel="Back to login"
-      backButtonHref="/auth/login"
-    >
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="space-y-6"
-        >
-          <div className="space-y-4">
-            <FormField
-              control={form.control}
-              name="email"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel className="text-[#08933D] font-medium">Email</FormLabel>
-                  <FormControl>
-                    <Input
-                      {...field}
-                      disabled={isPending}
-                      placeholder="john.doe@example.com"
-                      type="email"
-                      className="border-2 border-[#7FA8A7]/30 dark:border-gray-700 focus:border-[#08933D] rounded-lg shadow-sm"
-                    />
-                  </FormControl>
-                  <FormMessage className="text-[#0C1B72]" />
-                </FormItem>
-              )}
-            />
-          </div>
-          <FormError message={error} />
-          <FormSuccess message={success} />
-          <Button
-            disabled={isPending}
-            type="submit"
-            className="w-full bg-[#08933D] hover:bg-[#0C1B72] text-white font-semibold py-2.5 px-4 rounded-lg transition-all duration-300 ease-out shadow-md hover:shadow-lg"
-          >
-            {isPending && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
-            Send reset email
-          </Button>
-        </form>
-      </Form>
-    </CardWrapper>
+      </div>
+
+      {/* Back Button */}
+      <div className="flex justify-center pt-4">
+        <BackButton
+          label="Back to login"
+          href="/auth/login"
+        />
+      </div>
+    </div>
   );
 };

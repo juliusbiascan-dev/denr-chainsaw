@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { ChevronLeft } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -18,12 +19,13 @@ export const BackButton = ({
   if (!href || !label) return null;
   return (
     <Button
-      variant="link"
-      className={`font-normal text-[#08933D] dark:text-[#7FA8A7] hover:text-[#0C1B72] dark:hover:text-[#08933D] ${className}`}
+      variant="ghost"
+      className={`group flex items-center gap-2 text-white/80 hover:text-white hover:bg-white/10 transition-all duration-200 ${className}`}
       size="sm"
       asChild
     >
       <Link href={href}>
+        <ChevronLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
         {label}
       </Link>
     </Button>
