@@ -18,11 +18,11 @@ interface QRPrintUtilsProps {
 
 export function QRPrintUtils({ equipments, selectedEquipments }: QRPrintUtilsProps) {
   // Generate QR code and overlay logo at the center
-  const generateQRCodeDataURL = async (equipment: Equipment): Promise<string> => {
+  const generateQRCodeDataURL = async (equipment: Equipment, size: number = 200): Promise<string> => {
     const url = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://localhost:3001'}/equipments/${equipment.id}`;
     // DENR color scheme
     const qrCodeDataUrl = await QRCode.toDataURL(url, {
-      width: 200,
+      width: size,
       margin: 2,
       color: {
         dark: '#08933D', // Salem as Primary
@@ -32,7 +32,6 @@ export function QRPrintUtils({ equipments, selectedEquipments }: QRPrintUtilsPro
 
     // Create canvas and draw QR code
     const canvas = document.createElement('canvas');
-    const size = 200;
     canvas.width = size;
     canvas.height = size;
     const ctx = canvas.getContext('2d');
@@ -65,15 +64,27 @@ export function QRPrintUtils({ equipments, selectedEquipments }: QRPrintUtilsPro
 
   const printQRCodes = async (items: Equipment[]) => {
     try {
+      // Determine layout based on number of items
+      const itemCount = items.length;
+      const isSmallCount = itemCount <= 2;
+      const isSingleItem = itemCount === 1;
+
+      // Adjust QR code size based on item count
+      const qrSize = isSmallCount ? 280 : 200;
+
       const qrCodes = await Promise.all(
         items.map(async (equipment) => ({
           equipment,
-          dataURL: await generateQRCodeDataURL(equipment)
+          dataURL: await generateQRCodeDataURL(equipment, qrSize)
         }))
       );
 
       const printWindow = window.open('', '_blank');
       if (!printWindow) return;
+      const maxWidth = isSmallCount ? '400px' : '220px';
+      const gridColumns = isSingleItem ? '1fr' : isSmallCount ? 'repeat(auto-fit, minmax(300px, 1fr))' : 'repeat(auto-fit, minmax(220px, 1fr))';
+      const gridJustify = isSingleItem ? 'center' : 'start';
+      const containerMaxWidth = isSmallCount ? '800px' : 'none';
 
       const htmlContent = `
         <!DOCTYPE html>
@@ -87,6 +98,7 @@ export function QRPrintUtils({ equipments, selectedEquipments }: QRPrintUtilsPro
               background: #DDE5E1; /* Nubula */
               padding: 0;
               color: #0C1B72; /* Arapawa */
+              min-height: 100vh;
             }
             .header {
               text-align: center;
@@ -106,24 +118,32 @@ export function QRPrintUtils({ equipments, selectedEquipments }: QRPrintUtilsPro
               margin: 8px 0;
               color: #DDE5E1;
             }
+            .qr-container {
+              max-width: ${containerMaxWidth};
+              margin: 0 auto;
+              padding: 0 24px 24px 24px;
+            }
             .qr-grid {
               display: grid;
-              grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-              gap: 24px;
+              grid-template-columns: ${gridColumns};
+              gap: ${isSmallCount ? '32px' : '24px'};
               margin: 24px 0;
-              padding: 0 24px 24px 24px;
+              justify-items: ${gridJustify};
+              align-items: start;
             }
             .qr-item {
               border: 2px solid #7FA8A7; /* Gumbo */
               border-radius: 16px;
-              padding: 18px 12px;
+              padding: ${isSmallCount ? '24px 16px' : '18px 12px'};
               text-align: center;
               background: #fff;
               box-shadow: 0 2px 8px rgba(12,27,114,0.08);
               page-break-inside: avoid;
               width: 100%;
+              max-width: ${maxWidth};
               box-sizing: border-box;
               transition: box-shadow 0.2s;
+              ${isSingleItem ? 'margin: 0 auto;' : ''}
             }
             .qr-item:hover {
               box-shadow: 0 4px 16px rgba(8,147,61,0.12);
@@ -136,22 +156,24 @@ export function QRPrintUtils({ equipments, selectedEquipments }: QRPrintUtilsPro
               border-radius: 8px;
               background: #DDE5E1;
               border: 1px solid #7FA8A7;
+              width: ${qrSize}px;
+              height: ${qrSize}px;
             }
             .equipment-name {
               font-weight: 600;
-              font-size: clamp(14px, 3vw, 18px);
+              font-size: clamp(14px, 3vw, ${isSmallCount ? '20px' : '18px'});
               margin-bottom: 6px;
               color: #08933D;
               word-break: break-word;
             }
             .equipment-id {
-              font-size: clamp(11px, 2.5vw, 13px);
+              font-size: clamp(11px, 2.5vw, ${isSmallCount ? '15px' : '13px'});
               color: #0C1B72;
               margin-bottom: 8px;
               word-break: break-all;
             }
             .equipment-category {
-              font-size: clamp(10px, 2vw, 12px);
+              font-size: clamp(10px, 2vw, ${isSmallCount ? '14px' : '12px'});
               color: #fff;
               background: #7FA8A7;
               padding: 3px 10px;
@@ -167,25 +189,43 @@ export function QRPrintUtils({ equipments, selectedEquipments }: QRPrintUtilsPro
               .header {
                 padding: 16px 4px 0 4px;
               }
+              .qr-container {
+                padding: 0 8px 8px 8px;
+              }
               .qr-grid {
                 grid-template-columns: 1fr;
                 gap: 16px;
-                padding: 0 8px 8px 8px;
+                justify-items: center;
               }
               .qr-item {
                 padding: 12px 6px;
+                max-width: 100%;
+              }
+              .qr-item img {
+                width: ${isSmallCount ? '240px' : '200px'};
+                height: ${isSmallCount ? '240px' : '200px'};
+              }
+            }
+            @media screen and (max-width: 400px) {
+              .qr-item img {
+                width: ${isSmallCount ? '200px' : '180px'};
+                height: ${isSmallCount ? '200px' : '180px'};
               }
             }
             @media print {
               body { margin: 0; }
               .no-print { display: none; }
               .qr-grid {
-                gap: 10px;
+                gap: ${isSmallCount ? '20px' : '10px'};
               }
               .header {
                 background: #08933D !important;
                 color: #fff !important;
                 border-bottom: 2px solid #7FA8A7 !important;
+              }
+              .qr-item {
+                page-break-inside: avoid;
+                break-inside: avoid;
               }
             }
           </style>
@@ -196,15 +236,17 @@ export function QRPrintUtils({ equipments, selectedEquipments }: QRPrintUtilsPro
             <p>Generated on: ${new Date().toLocaleDateString()}</p>
             <p>Total Items: ${qrCodes.length}</p>
           </div>
-          <div class="qr-grid">
-            ${qrCodes.map(({ equipment, dataURL }) => `
-              <div class="qr-item">
-                <div class="equipment-name">${equipment.brand} ${equipment.model}</div>
-                <div class="equipment-id">ID: ${equipment.id}</div>
-                <img src="${dataURL}" alt="QR Code for ${equipment.brand} ${equipment.model}" />
-                <div class="equipment-category">${equipment.fuelType} | ${equipment.intendedUse}</div>
-              </div>
-            `).join('')}
+          <div class="qr-container">
+            <div class="qr-grid">
+              ${qrCodes.map(({ equipment, dataURL }) => `
+                <div class="qr-item">
+                  <div class="equipment-name">${equipment.brand} ${equipment.model}</div>
+                  <div class="equipment-id">ID: ${equipment.id}</div>
+                  <img src="${dataURL}" alt="QR Code for ${equipment.brand} ${equipment.model}" />
+                  <div class="equipment-category">${equipment.fuelType} | ${equipment.intendedUse}</div>
+                </div>
+              `).join('')}
+            </div>
           </div>
         </body>
         </html>
@@ -230,10 +272,15 @@ export function QRPrintUtils({ equipments, selectedEquipments }: QRPrintUtilsPro
       const JSZip = (await import('jszip')).default;
       const zipFile = new JSZip();
 
+      // Determine QR code size based on number of items
+      const itemCount = items.length;
+      const isSmallCount = itemCount <= 2;
+      const qrSize = isSmallCount ? 280 : 200;
+
       const qrCodes = await Promise.all(
         items.map(async (equipment) => ({
           equipment,
-          dataURL: await generateQRCodeDataURL(equipment)
+          dataURL: await generateQRCodeDataURL(equipment, qrSize)
         }))
       );
 
@@ -275,11 +322,11 @@ export function QRPrintUtils({ equipments, selectedEquipments }: QRPrintUtilsPro
           <DropdownMenuContent align="end" className="w-[200px]">
             <DropdownMenuItem onClick={() => printQRCodes(itemsToProcess)}>
               <Printer className="h-4 w-4 mr-2" />
-              <span>Print {hasSelection ? `(${selectedEquipments.length})` : 'All'}</span>
+              <span>Print {hasSelection ? `(${selectedEquipments.length})` : `(${equipments.length})`}</span>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => downloadQRCodes(itemsToProcess)}>
               <Download className="h-4 w-4 mr-2" />
-              <span>Download {hasSelection ? `(${selectedEquipments.length})` : 'All'}</span>
+              <span>Download {hasSelection ? `(${selectedEquipments.length})` : `(${equipments.length})`}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -294,7 +341,7 @@ export function QRPrintUtils({ equipments, selectedEquipments }: QRPrintUtilsPro
           disabled={itemsToProcess.length === 0}
         >
           <Printer className="h-4 w-4 mr-2" />
-          Print {hasSelection ? `Selected (${selectedEquipments.length})` : 'All'} QR Codes
+          Print {hasSelection ? `Selected (${selectedEquipments.length})` : `All (${equipments.length})`} QR Codes
         </Button>
         <Button
           variant="outline"
@@ -303,7 +350,7 @@ export function QRPrintUtils({ equipments, selectedEquipments }: QRPrintUtilsPro
           disabled={itemsToProcess.length === 0}
         >
           <Download className="h-4 w-4 mr-2" />
-          Download {hasSelection ? `Selected (${selectedEquipments.length})` : 'All'} QR Codes
+          Download {hasSelection ? `Selected (${selectedEquipments.length})` : `All (${equipments.length})`} QR Codes
         </Button>
       </div>
     </>

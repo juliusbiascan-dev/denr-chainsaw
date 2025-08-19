@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { matchSorter } from 'match-sorter';
+import { FuelType, UseType } from "@/lib/generated/prisma";
 
 export const getAll = async ({
   search
@@ -14,9 +14,11 @@ export const getAll = async ({
 
     // Search functionality across multiple fields
     if (search) {
-      equipments = matchSorter(equipments, search, {
-        keys: ['brand', 'model', 'serialNumber']
-      });
+      equipments = equipments.filter(equipment =>
+        equipment.brand.toLowerCase().includes(search.toLowerCase()) ||
+        equipment.model.toLowerCase().includes(search.toLowerCase()) ||
+        equipment.serialNumber.toLowerCase().includes(search.toLowerCase())
+      );
     }
 
     return equipments;
@@ -25,22 +27,77 @@ export const getAll = async ({
     return [];
   }
 }
+
 export const getEquipments = async ({
   page = 1,
   limit = 10,
-  search
+  search,
+  categories
 }: {
   page?: number;
   limit?: number;
   search?: string;
+  categories?: string[];
 }) => {
   try {
-    const allEquipments = await getAll({ search });
-    const totalEquipments = allEquipments.length;
+    console.log('getEquipments called with:', { page, limit, search, categories });
 
-    // Pagination logic
-    const offset = (page - 1) * limit;
-    const paginatedEquipments = allEquipments.slice(offset, offset + limit);
+    // Build the where clause for filtering
+    const whereClause: any = {};
+
+    // Handle search across multiple fields
+    if (search) {
+      whereClause.OR = [
+        { brand: { contains: search, mode: 'insensitive' } },
+        { model: { contains: search, mode: 'insensitive' } },
+        { serialNumber: { contains: search, mode: 'insensitive' } }
+      ];
+    }
+
+    // Handle category filters
+    if (categories && categories.length > 0) {
+      const fuelTypeCategories = categories.filter(cat =>
+        ['GAS', 'DIESEL', 'ELECTRIC', 'OTHER'].includes(cat)
+      );
+      const useTypeCategories = categories.filter(cat =>
+        ['WOOD_PROCESSING', 'TREE_CUTTING', 'LEGAL_PURPOSES', 'OFFICIAL_TREE_CUTTING', 'OTHER'].includes(cat)
+      );
+
+      console.log('Filtered categories:', { fuelTypeCategories, useTypeCategories });
+
+      if (fuelTypeCategories.length > 0 || useTypeCategories.length > 0) {
+        whereClause.AND = [];
+
+        if (fuelTypeCategories.length > 0) {
+          whereClause.AND.push({
+            fuelType: { in: fuelTypeCategories as FuelType[] }
+          });
+        }
+
+        if (useTypeCategories.length > 0) {
+          whereClause.AND.push({
+            intendedUse: { in: useTypeCategories as UseType[] }
+          });
+        }
+      }
+    }
+
+    console.log('Final where clause:', JSON.stringify(whereClause, null, 2));
+
+    // Get total count for pagination
+    const totalEquipments = await db.equipment.count({
+      where: whereClause
+    });
+
+    // Get paginated equipments
+    const equipments = await db.equipment.findMany({
+      where: whereClause,
+      skip: (page - 1) * limit,
+      take: limit,
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
 
     // Mock current time
     const currentTime = new Date().toISOString();
@@ -51,9 +108,9 @@ export const getEquipments = async ({
       time: currentTime,
       message: 'Equipment data retrieved successfully',
       total_equipments: totalEquipments,
-      offset,
+      offset: (page - 1) * limit,
       limit,
-      equipments: paginatedEquipments
+      equipments: equipments
     };
   } catch (error) {
     console.error('Error fetching equipments:', error);

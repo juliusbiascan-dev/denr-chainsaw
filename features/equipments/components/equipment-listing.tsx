@@ -13,15 +13,26 @@ export default async function EquipmentListingPage({ }: EquipmentListingPage) {
     const page = searchParamsCache.get('page');
     const search = searchParamsCache.get('name');
     const pageLimit = searchParamsCache.get('perPage');
-    const categories = searchParamsCache.get('category');
+    const fuelType = searchParamsCache.get('fuelType');
+    const intendedUse = searchParamsCache.get('intendedUse');
+
+    // Parse filter categories if they exist
+    let parsedCategories: string[] = [];
+    if (fuelType) {
+      parsedCategories.push(...fuelType.split(',').map(cat => cat.trim()));
+    }
+    if (intendedUse) {
+      parsedCategories.push(...intendedUse.split(',').map(cat => cat.trim()));
+    }
 
     const filters = {
-      page,
-      limit: pageLimit,
+      page: page || 1,
+      limit: pageLimit || 10,
       ...(search && { search }),
-      ...(categories && { categories: categories })
+      ...(parsedCategories.length > 0 && { categories: parsedCategories })
     };
 
+    console.log('Applied filters:', filters);
     const data = await getEquipments(filters);
     console.log('Equipment data:', data);
 
