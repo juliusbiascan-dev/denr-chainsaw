@@ -80,6 +80,21 @@ export const RegisterForm = ({
       {/* Header */}
       <Header label="Create an account" />
 
+      {/* Testing Notice */}
+      <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
+        <div className="flex items-start space-x-3">
+          <Icons.warning className="h-5 w-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" />
+          <div className="text-sm">
+            <p className="font-medium text-amber-800 dark:text-amber-200 mb-1">
+              Testing Environment Notice
+            </p>
+            <p className="text-amber-700 dark:text-amber-300">
+              This registration page is for testing purposes only. In production, user registration will be managed through default accounts as this is a private management system, not open for public registration.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Form */}
       <div className="space-y-6">
         <Form {...form}>
