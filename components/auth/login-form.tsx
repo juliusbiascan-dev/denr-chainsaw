@@ -184,13 +184,13 @@ export const LoginForm = () => {
         {/* {!showTwoFactor && <Social />} */}
       </div>
 
-      {/* Back Button */}
+      {/* Back Button
       <div className="flex justify-center pt-4">
         <BackButton
           label="Don't have an account?"
           href="/auth/register"
         />
-      </div>
+      </div> */}
     </div>
   );
 };
