@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "postinstall": "prisma generate",
-    "dev": "next dev --turbopack --experimental-https",
+    "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -47,7 +47,6 @@
     "@tanstack/react-table": "^8.21.3",
     "@types/jszip": "^3.4.1",
     "@types/qrcode": "^1.5.5",
-    "@yudiel/react-qr-scanner": "^2.3.1",
     "bcryptjs": "^3.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
