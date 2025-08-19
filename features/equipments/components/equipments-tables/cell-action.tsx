@@ -1,7 +1,6 @@
 'use client';
 
 import { AlertModal } from '@/components/modal/alert-modal';
-import { QrModal } from '@/components/modal/qr-modal';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
@@ -12,11 +11,9 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Equipment } from '@/constants/data';
 import { deleteEquipmentAction } from '@/actions/equipment';
-import { IconEdit, IconDotsVertical, IconTrash } from '@tabler/icons-react';
-import { QrCodeIcon } from 'lucide-react';
+import { IconEdit, IconDotsVertical, IconTrash, IconEye } from '@tabler/icons-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { set } from 'zod';
 
 interface CellActionProps {
   data: Equipment;
@@ -25,7 +22,6 @@ interface CellActionProps {
 export const CellAction: React.FC<CellActionProps> = ({ data }) => {
   const [loading] = useState(false);
   const [open, setOpen] = useState(false);
-  const [openQr, setOpenQr] = useState(false);
   const router = useRouter();
 
   const onConfirm = async () => {
@@ -48,19 +44,10 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
 
   return (
     <>
-
       <AlertModal
         isOpen={open}
         onClose={() => setOpen(false)}
         onConfirm={onConfirm}
-        loading={loading}
-      />
-      <QrModal
-        url={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://localhost:3001'}/equipments/${data.id}`}
-        isOpen={openQr}
-        onClose={() => setOpenQr(false)}
-        onConfirm={() =>
-          setOpenQr(false)}
         loading={loading}
       />
 
@@ -75,9 +62,9 @@ export const CellAction: React.FC<CellActionProps> = ({ data }) => {
           <DropdownMenuLabel>Actions</DropdownMenuLabel>
 
           <DropdownMenuItem
-            onClick={() => setOpenQr(true)}
+            onClick={() => window.open(`${process.env.NEXT_PUBLIC_BASE_URL || 'https://localhost:3001'}/equipments/${data.id}`, '_blank')}
           >
-            <QrCodeIcon className='mr-2 h-4 w-4' /> Generate QR
+            <IconEye className='mr-2 h-4 w-4' /> View
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => router.push(`/dashboard/equipments/${data.id}`)}

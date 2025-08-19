@@ -9,12 +9,13 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { CheckCircle2, XCircle, QrCode, Edit, Trash2 } from 'lucide-react';
+import { CheckCircle2, XCircle, QrCode, Edit, Trash2, User, MapPin, Phone, Mail, FileText } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { QRCodeDisplay } from '@/components/qr-code-display';
 import { AlertModal } from '@/components/modal/alert-modal';
 import { deleteEquipmentAction } from '@/actions/equipment';
+import { Separator } from '@/components/ui/separator';
 
 interface EquipmentCardProps {
   equipment: Equipment;
@@ -74,53 +75,133 @@ export function EquipmentCard({ equipment, isSelected, onSelectionChange }: Equi
             <AccordionTrigger>View Details</AccordionTrigger>
             <AccordionContent>
               <div className="space-y-3">
-                <div>
-                  <label className="text-sm text-muted-foreground dark:text-gray-400">Intended Use</label>
-                  <Badge variant='outline' className='capitalize ml-2 dark:border-gray-600 dark:text-gray-300'>
-                    {equipment.isNew ? <CheckCircle2 className="w-4 h-4 mr-1" /> : <XCircle className="w-4 h-4 mr-1" />}
-                    {equipment.intendedUse.replace('_', ' ').toLowerCase()}
-                  </Badge>
+                {/* Owner Information */}
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-primary flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    Owner Information
+                  </h4>
+
+                  <div>
+                    <label className="text-sm text-muted-foreground dark:text-gray-400">Full Name</label>
+                    <p className="mt-1 dark:text-gray-300 font-medium">
+                      {equipment.ownerFirstName} {equipment.ownerMiddleName} {equipment.ownerLastName}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-muted-foreground dark:text-gray-400 flex items-center gap-1">
+                      <MapPin className="w-3 h-3" />
+                      Address
+                    </label>
+                    <p className="mt-1 dark:text-gray-300 bg-muted/30 p-2 rounded-md">
+                      {equipment.ownerAddress}
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-2">
+                    {equipment.ownerContactNumber && (
+                      <div>
+                        <label className="text-sm text-muted-foreground dark:text-gray-400 flex items-center gap-1">
+                          <Phone className="w-3 h-3" />
+                          Contact Number
+                        </label>
+                        <p className="mt-1 dark:text-gray-300">{equipment.ownerContactNumber}</p>
+                      </div>
+                    )}
+
+                    {equipment.ownerEmail && (
+                      <div>
+                        <label className="text-sm text-muted-foreground dark:text-gray-400 flex items-center gap-1">
+                          <Mail className="w-3 h-3" />
+                          Email Address
+                        </label>
+                        <p className="mt-1 dark:text-gray-300">{equipment.ownerEmail}</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {equipment.ownerPreferContactMethod && (
+                    <div>
+                      <label className="text-sm text-muted-foreground dark:text-gray-400">Preferred Contact Method</label>
+                      <Badge variant="outline" className="mt-1 text-xs">
+                        {equipment.ownerPreferContactMethod}
+                      </Badge>
+                    </div>
+                  )}
+
+                  {equipment.ownerIdUrl && (
+                    <div>
+                      <label className="text-sm text-muted-foreground dark:text-gray-400 flex items-center gap-1">
+                        <FileText className="w-3 h-3" />
+                        ID Document
+                      </label>
+                      <a
+                        href={equipment.ownerIdUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-xs text-primary hover:underline mt-1 block"
+                      >
+                        View ID Document
+                      </a>
+                    </div>
+                  )}
                 </div>
 
-                <div>
-                  <label className="text-sm text-muted-foreground dark:text-gray-400">Serial Number</label>
-                  <p className="mt-1 dark:text-gray-300">{equipment.serialNumber}</p>
-                </div>
+                <Separator />
 
-                <div>
-                  <label className="text-sm text-muted-foreground dark:text-gray-400">Date Acquired</label>
-                  <p className="mt-1 dark:text-gray-300">
-                    {new Date(equipment.dateAcquired).toLocaleDateString('en-US', {
-                      month: 'long',
-                      day: 'numeric',
-                      year: 'numeric'
-                    })}
-                  </p>
-                </div>
+                {/* Equipment Information */}
+                <div className="space-y-3">
+                  <h4 className="font-semibold text-primary">Equipment Information</h4>
 
-                <div>
-                  <label className="text-sm text-muted-foreground dark:text-gray-400">Specifications</label>
-                  <p className="mt-1 dark:text-gray-300">
-                    Guid Bar Length: {equipment.guidBarLength}mm<br />
-                    Horse Power: {equipment.horsePower}hp<br />
-                    Fuel Type: {equipment.fuelType}
-                  </p>
-                </div>
+                  <div>
+                    <label className="text-sm text-muted-foreground dark:text-gray-400">Intended Use</label>
+                    <Badge variant='outline' className='capitalize ml-2 dark:border-gray-600 dark:text-gray-300'>
+                      {equipment.isNew ? <CheckCircle2 className="w-4 h-4 mr-1" /> : <XCircle className="w-4 h-4 mr-1" />}
+                      {equipment.intendedUse.replace('_', ' ').toLowerCase()}
+                    </Badge>
+                  </div>
 
-                <div>
-                  <label className="text-sm text-muted-foreground dark:text-gray-400">Additional Info</label>
-                  <p className="mt-1 dark:text-gray-300">{equipment.otherInfo}</p>
-                </div>
+                  <div>
+                    <label className="text-sm text-muted-foreground dark:text-gray-400">Serial Number</label>
+                    <p className="mt-1 dark:text-gray-300">{equipment.serialNumber}</p>
+                  </div>
 
-                <div>
-                  <label className="text-sm text-muted-foreground dark:text-gray-400">Last Updated</label>
-                  <p className="mt-1 dark:text-gray-300">
-                    {new Date(equipment.updatedAt).toLocaleDateString('en-US', {
-                      month: 'long',
-                      day: 'numeric',
-                      year: 'numeric'
-                    })}
-                  </p>
+                  <div>
+                    <label className="text-sm text-muted-foreground dark:text-gray-400">Date Acquired</label>
+                    <p className="mt-1 dark:text-gray-300">
+                      {new Date(equipment.dateAcquired).toLocaleDateString('en-US', {
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-muted-foreground dark:text-gray-400">Specifications</label>
+                    <p className="mt-1 dark:text-gray-300">
+                      Guid Bar Length: {equipment.guidBarLength}mm<br />
+                      Horse Power: {equipment.horsePower}hp<br />
+                      Fuel Type: {equipment.fuelType}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-muted-foreground dark:text-gray-400">Additional Info</label>
+                    <p className="mt-1 dark:text-gray-300">{equipment.otherInfo}</p>
+                  </div>
+
+                  <div>
+                    <label className="text-sm text-muted-foreground dark:text-gray-400">Last Updated</label>
+                    <p className="mt-1 dark:text-gray-300">
+                      {new Date(equipment.updatedAt).toLocaleDateString('en-US', {
+                        month: 'long',
+                        day: 'numeric',
+                        year: 'numeric'
+                      })}
+                    </p>
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2 pt-2">

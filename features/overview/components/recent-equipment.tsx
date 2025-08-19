@@ -12,6 +12,9 @@ import { db } from '@/lib/db';
 // Equipment type definition
 type Equipment = {
   id: string;
+  ownerFirstName: string;
+  ownerLastName: string;
+  ownerMiddleName: string;
   brand: string;
   model: string;
   serialNumber: string;
@@ -73,6 +76,12 @@ function formatDate(date: Date): string {
   }).format(date);
 }
 
+// Function to format owner's full name
+function formatOwnerName(firstName: string, lastName: string, middleName: string): string {
+  const parts = [firstName, middleName, lastName].filter(Boolean);
+  return parts.join(' ');
+}
+
 export async function RecentEquipment() {
   const recentEquipments = await getRecentEquipments();
 
@@ -103,6 +112,9 @@ export async function RecentEquipment() {
               <div className="sm:ml-4 space-y-1 flex-1">
                 <p className="text-sm leading-none font-medium truncate w-[100px] sm:w-auto">{equipment.brand} {equipment.model}</p>
                 <p className="text-muted-foreground text-sm truncate w-[120px] sm:w-auto">SN: {equipment.serialNumber}</p>
+                <p className="text-muted-foreground text-sm truncate w-[150px] sm:w-auto">
+                  Owner: {formatOwnerName(equipment.ownerFirstName, equipment.ownerLastName, equipment.ownerMiddleName)}
+                </p>
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="outline" className="text-xs">
                     {equipment.fuelType}
@@ -122,6 +134,8 @@ export async function RecentEquipment() {
               <div className="sm:ml-auto sm:text-right space-y-1 flex flex-row sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto">
                 <div className="text-xs text-muted-foreground">Valid Until</div>
                 <div className="text-sm font-medium">{formatDate(getValidUntilDate(equipment.dateAcquired))}</div>
+                <div className="text-xs text-muted-foreground mt-2">Created</div>
+                <div className="text-xs font-medium">{formatDate(equipment.createdAt)}</div>
               </div>
             </div>
           ))}

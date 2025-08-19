@@ -65,6 +65,16 @@ export default async function EquipmentListingPage({ }: EquipmentListingPage) {
       // Ensure all dates are in ISO format for consistent handling
       return {
         id: equipment.id,
+        // Owner Information
+        ownerFirstName: equipment.ownerFirstName,
+        ownerLastName: equipment.ownerLastName,
+        ownerMiddleName: equipment.ownerMiddleName,
+        ownerAddress: equipment.ownerAddress,
+        ownerContactNumber: equipment.ownerContactNumber,
+        ownerEmail: equipment.ownerEmail,
+        ownerPreferContactMethod: equipment.ownerPreferContactMethod,
+        ownerIdUrl: equipment.ownerIdUrl,
+        // Equipment Information
         brand: equipment.brand,
         model: equipment.model,
         serialNumber: equipment.serialNumber,

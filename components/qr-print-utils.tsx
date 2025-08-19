@@ -2,7 +2,7 @@
 
 import { Equipment } from '@/constants/data';
 import { Button } from '@/components/ui/button';
-import { Printer, Download, MoreVertical } from 'lucide-react';
+import { Printer, MoreVertical } from 'lucide-react';
 import QRCode from 'qrcode';
 import {
   DropdownMenu,
@@ -428,45 +428,6 @@ export function QRPrintUtils({ equipments, selectedEquipments }: QRPrintUtilsPro
     }
   };
 
-  const downloadQRCodes = async (items: Equipment[]) => {
-    try {
-      const JSZip = (await import('jszip')).default;
-      const zipFile = new JSZip();
-
-      // Determine QR code size based on number of items
-      const itemCount = items.length;
-      const isSmallCount = itemCount <= 2;
-      const qrSize = isSmallCount ? 280 : 200;
-
-      const qrCodes = await Promise.all(
-        items.map(async (equipment) => ({
-          equipment,
-          dataURL: await generateQRCodeDataURL(equipment, qrSize)
-        }))
-      );
-
-      // Add QR codes to zip
-      qrCodes.forEach(({ equipment, dataURL }) => {
-        const base64Data = dataURL.split(',')[1];
-        zipFile.file(`${equipment.brand}-${equipment.model}-${equipment.id}.png`, base64Data, { base64: true });
-      });
-
-      // Generate and download zip
-      const content = await zipFile.generateAsync({ type: 'blob' });
-      const url = URL.createObjectURL(content);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `equipment-qr-stickers-${new Date().toISOString().split('T')[0]}.zip`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error('Error downloading QR codes:', error);
-      alert('Error downloading QR codes');
-    }
-  };
-
   const hasSelection = selectedEquipments && selectedEquipments.length > 0;
   const itemsToProcess = hasSelection ? selectedEquipments : equipments;
 
@@ -485,10 +446,6 @@ export function QRPrintUtils({ equipments, selectedEquipments }: QRPrintUtilsPro
               <Printer className="h-4 w-4 mr-2" />
               <span>Print Stickers {hasSelection ? `(${selectedEquipments.length})` : `(${equipments.length})`}</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => downloadQRCodes(itemsToProcess)}>
-              <Download className="h-4 w-4 mr-2" />
-              <span>Download QR Codes {hasSelection ? `(${selectedEquipments.length})` : `(${equipments.length})`}</span>
-            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -503,15 +460,6 @@ export function QRPrintUtils({ equipments, selectedEquipments }: QRPrintUtilsPro
         >
           <Printer className="h-4 w-4 mr-2" />
           Print Stickers {hasSelection ? `Selected (${selectedEquipments.length})` : `All (${equipments.length})`}
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => downloadQRCodes(itemsToProcess)}
-          disabled={itemsToProcess.length === 0}
-        >
-          <Download className="h-4 w-4 mr-2" />
-          Download QR Codes {hasSelection ? `Selected (${selectedEquipments.length})` : `All (${equipments.length})`}
         </Button>
       </div>
     </>

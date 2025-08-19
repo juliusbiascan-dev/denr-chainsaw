@@ -43,7 +43,7 @@ import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
 import { Textarea } from '@/components/ui/textarea';
 import { FileUploader } from '@/components/file-uploader';
-import { UploadButton } from '@/lib/uploadthing';
+import { UploadButton, UploadDropzone } from '@/lib/uploadthing';
 import { toast } from 'sonner';
 
 export default function EquipmentForm({
@@ -223,9 +223,8 @@ export default function EquipmentForm({
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
-                          <SelectItem value="PHONE">Phone</SelectItem>
-                          <SelectItem value="EMAIL">Email</SelectItem>
-                          <SelectItem value="SMS">SMS</SelectItem>
+                          <SelectItem value="EMAIL">Email thru the provided Email Address</SelectItem>
+                          <SelectItem value="PHONE">Text Message thru the Provided Contact Number</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormMessage />
@@ -258,22 +257,29 @@ export default function EquipmentForm({
                   <FormItem>
                     <FormLabel>Owner ID Image</FormLabel>
                     <FormControl>
-                      <UploadButton
-                        endpoint="imageUploader"
-                        onClientUploadComplete={(res: any) => {
-                          if (res && res[0]) {
-                            setOwnerIdUrl(res[0].url);
-                            toast.success("ID image uploaded successfully!");
-                          }
-                        }}
-                        onUploadError={(error: Error) => {
-                          console.error("Upload error:", error);
-                          toast.error(`Error uploading image: ${error.message}`);
-                        }}
-                        onUploadBegin={(fileName: string) => {
-                          console.log("Upload beginning:", fileName);
-                        }}
-                      />
+                      <div className="space-y-4">
+                        {/* Upload Dropzone */}
+                        <div>
+                          <p className="text-sm font-medium mb-2">Or drag and drop:</p>
+                          <UploadDropzone
+                            endpoint="imageUploader"
+                            onClientUploadComplete={(res: any) => {
+                              if (res && res[0]) {
+                                setOwnerIdUrl(res[0].url);
+                                toast.success("ID image uploaded successfully!");
+                              }
+                            }}
+                            onUploadError={(error: Error) => {
+                              console.error("Upload error:", error);
+                              toast.error(`Error uploading image: ${error.message}`);
+                            }}
+                            onUploadBegin={(fileName: string) => {
+                              console.log("Upload beginning:", fileName);
+                            }}
+                            className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
+                          />
+                        </div>
+                      </div>
                     </FormControl>
                     {ownerIdUrl && (
                       <div className='mt-2'>

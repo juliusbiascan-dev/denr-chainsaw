@@ -3,27 +3,31 @@
 import { DataTable } from '@/components/ui/table/data-table';
 import { DataTableToolbar } from '@/components/ui/table/data-table-toolbar';
 import { QRPrintUtils } from '@/components/qr-print-utils';
+import { ExcelUtils } from '@/components/excel-utils';
+import { BulkDeleteUtils } from '@/components/bulk-delete-utils';
 import { Equipment } from '@/constants/data';
 import { EquipmentCard } from '../equipment-card';
 import { EquipmentMobileSkeleton } from '../equipment-mobile-skeleton';
+import { ExpandableOwnerInfo } from './expandable-owner-info';
 
 import { useDataTable } from '@/hooks/use-data-table';
 
 import { ColumnDef } from '@tanstack/react-table';
 import { parseAsInteger, useQueryState } from 'nuqs';
-import PageContainer from '@/components/layout/page-container';
-interface EquipmentTableParams<TData, TValue> {
-  data: TData[];
+
+interface EquipmentTableParams {
+  data: Equipment[];
   totalItems: number;
-  columns: ColumnDef<TData, TValue>[];
+  columns: ColumnDef<Equipment, any>[];
   isLoading?: boolean;
 }
-export function EquipmentTable<TData, TValue>({
+
+export function EquipmentTable({
   data,
   totalItems,
   columns,
   isLoading = false
-}: EquipmentTableParams<TData, TValue>) {
+}: EquipmentTableParams) {
   const [pageSize] = useQueryState('perPage', parseAsInteger.withDefault(10));
 
   const pageCount = Math.ceil(totalItems / pageSize);
@@ -44,7 +48,7 @@ export function EquipmentTable<TData, TValue>({
     }
   });
 
-  const selectedEquipments = table.getFilteredSelectedRowModel().rows.map(row => row.original) as Equipment[];
+  const selectedEquipments = table.getFilteredSelectedRowModel().rows.map(row => row.original);
 
   return (
     <div className="w-full space-y-4">
@@ -53,17 +57,38 @@ export function EquipmentTable<TData, TValue>({
         <DataTable
           table={table}
           actionBar={
-            <QRPrintUtils
-              equipments={data as Equipment[]}
-              selectedEquipments={selectedEquipments}
-            />
+            <div className="flex gap-2 items-center">
+              <QRPrintUtils
+                equipments={data}
+                selectedEquipments={selectedEquipments}
+              />
+              <ExcelUtils
+                equipments={data}
+                selectedEquipments={selectedEquipments}
+              />
+              <BulkDeleteUtils
+                selectedEquipments={selectedEquipments}
+              />
+            </div>
           }
+          expandableContent={(equipment: Equipment) => (
+            <ExpandableOwnerInfo equipment={equipment} />
+          )}
         >
           <DataTableToolbar table={table}>
-            <QRPrintUtils
-              equipments={data as Equipment[]}
-              selectedEquipments={selectedEquipments}
-            />
+            <div className="flex gap-2 items-center">
+              <QRPrintUtils
+                equipments={data}
+                selectedEquipments={selectedEquipments}
+              />
+              <ExcelUtils
+                equipments={data}
+                selectedEquipments={selectedEquipments}
+              />
+              <BulkDeleteUtils
+                selectedEquipments={selectedEquipments}
+              />
+            </div>
           </DataTableToolbar>
         </DataTable>
       </div>
@@ -76,10 +101,19 @@ export function EquipmentTable<TData, TValue>({
           {/* Sticky Toolbar */}
           <div className="sticky top-0 z-10 bg-background pb-4">
             <DataTableToolbar table={table}>
-              <QRPrintUtils
-                equipments={data as Equipment[]}
-                selectedEquipments={selectedEquipments}
-              />
+              <div className="flex gap-2 items-center">
+                <QRPrintUtils
+                  equipments={data}
+                  selectedEquipments={selectedEquipments}
+                />
+                <ExcelUtils
+                  equipments={data}
+                  selectedEquipments={selectedEquipments}
+                />
+                <BulkDeleteUtils
+                  selectedEquipments={selectedEquipments}
+                />
+              </div>
             </DataTableToolbar>
           </div>
 
@@ -88,7 +122,7 @@ export function EquipmentTable<TData, TValue>({
             {table.getRowModel().rows.map((row) => (
               <EquipmentCard
                 key={row.id}
-                equipment={row.original as Equipment}
+                equipment={row.original}
                 isSelected={row.getIsSelected()}
                 onSelectionChange={(checked: boolean) => row.toggleSelected(!!checked)}
               />
@@ -125,10 +159,19 @@ export function EquipmentTable<TData, TValue>({
           {/* Sticky Bottom Actions */}
           {selectedEquipments.length > 0 && (
             <div className="fixed bottom-4 left-4 right-4 p-4 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-lg shadow-lg">
-              <QRPrintUtils
-                equipments={data as Equipment[]}
-                selectedEquipments={selectedEquipments}
-              />
+              <div className="flex gap-2 items-center justify-center">
+                <QRPrintUtils
+                  equipments={data}
+                  selectedEquipments={selectedEquipments}
+                />
+                <ExcelUtils
+                  equipments={data}
+                  selectedEquipments={selectedEquipments}
+                />
+                <BulkDeleteUtils
+                  selectedEquipments={selectedEquipments}
+                />
+              </div>
             </div>
           )}
         </div>

@@ -5,6 +5,16 @@ export type UseType = 'WOOD_PROCESSING' | 'TREE_CUTTING' | 'LEGAL_PURPOSES' | 'O
 
 export type Equipment = {
   id: string;
+  // Owner Information
+  ownerFirstName: string;
+  ownerLastName: string;
+  ownerMiddleName: string;
+  ownerAddress: string;
+  ownerContactNumber?: string;
+  ownerEmail?: string;
+  ownerPreferContactMethod?: string;
+  ownerIdUrl?: string;
+  // Equipment Information
   brand: string;
   model: string;
   serialNumber: string;

@@ -6,9 +6,8 @@ import { DataTableColumnHeader } from '@/components/ui/table/data-table-column-h
 import { Equipment, FuelType, UseType } from '@/constants/data';
 import { DEFAULT_FUEL_TYPES, DEFAULT_USE_TYPES } from './options';
 import { Column, ColumnDef } from '@tanstack/react-table';
-import { CheckCircle2, Text, XCircle, QrCode, Edit, Trash2 } from 'lucide-react';
+import { CheckCircle2, Text, XCircle, Edit, Trash2, Eye } from 'lucide-react';
 import { DynamicCategoryFilter } from '@/components/ui/table/dynamic-category-filter';
-import { QRCodeDisplay } from '@/components/qr-code-display';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { deleteEquipmentAction } from '@/actions/equipment';
@@ -16,7 +15,6 @@ import { AlertModal } from '@/components/modal/alert-modal';
 
 // Inline Actions Component
 const InlineActions = ({ equipment }: { equipment: Equipment }) => {
-  const [showQR, setShowQR] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -47,11 +45,11 @@ const InlineActions = ({ equipment }: { equipment: Equipment }) => {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => setShowQR(!showQR)}
+          onClick={() => window.open(`${process.env.NEXT_PUBLIC_BASE_URL || 'https://localhost:3001'}/equipments/${equipment.id}`, '_blank')}
           className="h-8 w-8 p-0"
-          title="Toggle QR Code"
+          title="View Equipment"
         >
-          <QrCode className="h-4 w-4" />
+          <Eye className="h-4 w-4" />
         </Button>
         <Button
           variant="ghost"
@@ -72,19 +70,6 @@ const InlineActions = ({ equipment }: { equipment: Equipment }) => {
           <Trash2 className="h-4 w-4" />
         </Button>
       </div>
-
-      {showQR && (
-        <div className="mt-2 p-2 border rounded-lg bg-white shadow-sm">
-          <QRCodeDisplay
-            value={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://localhost:3001'}/equipments/${equipment.id}`}
-            size={120}
-            className="mx-auto"
-          />
-          <p className="text-xs text-center mt-1 text-gray-600">
-            {equipment.model}
-          </p>
-        </div>
-      )}
 
       <AlertModal
         isOpen={showDeleteModal}
@@ -138,7 +123,12 @@ export const columns: ColumnDef<Equipment>[] = [
     header: ({ column }: { column: Column<Equipment, unknown> }) => (
       <DataTableColumnHeader column={column} title='Brand' />
     ),
-    cell: ({ cell }) => <div>{cell.getValue<Equipment['brand']>()}</div>,
+    cell: ({ cell }) => (
+      <div className="flex items-center gap-2">
+        <span className="font-medium">{cell.getValue<Equipment['brand']>()}</span>
+        <span className="text-xs text-muted-foreground/60">↕</span>
+      </div>
+    ),
     meta: {
       label: 'Brand',
       placeholder: 'Search by brand',
