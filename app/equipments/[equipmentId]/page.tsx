@@ -16,10 +16,17 @@ import {
   Fuel,
   AlertTriangle,
   Download,
-  ExternalLink
+  ExternalLink,
+  CheckCircle,
+  XCircle,
+  Clock,
+  Shield,
+  Building,
+  FileCheck,
+  FileX
 } from "lucide-react";
-import { formatFuelType, formatUseType, formatDate } from "@/lib/format";
-import { calculateEquipmentStatus, getStatusBadgeVariant } from "@/lib/utils";
+import { formatFuelType, formatUseType, formatDate, formatDateTime } from "@/lib/format";
+import { calculateEquipmentStatus, getStatusBadgeVariant, getStatusLabel, getStatusDescription } from "@/lib/utils";
 import PageContainer from "@/components/layout/page-container";
 
 export const metadata = {
@@ -69,19 +76,52 @@ export default async function Page(props: PageProps) {
   const status = calculateEquipmentStatus(data.isNew, data.dateAcquired, data.createdAt);
 
   const getStatusBadge = () => {
+    const variant = getStatusBadgeVariant(status);
+    const label = getStatusLabel(status);
+
     if (isExpired) {
       return <Badge variant="destructive" className="gap-1"><AlertTriangle className="w-3 h-3" />Expired</Badge>;
     } else if (daysUntilExpiry <= 30) {
       return <Badge variant="secondary" className="gap-1 text-orange-600 bg-orange-50 border-orange-200"><AlertTriangle className="w-3 h-3" />Expiring Soon</Badge>;
     } else {
-      return <Badge variant="default" className="gap-1 bg-green-50 text-green-700 border-green-200">Active</Badge>;
+      return <Badge variant={variant} className="gap-1">{label}</Badge>;
+    }
+  };
+
+  const getApplicationStatusBadge = () => {
+    if (!data.initialApplicationStatus) return null;
+
+    switch (data.initialApplicationStatus) {
+      case 'ACCEPTED':
+        return <Badge variant="default" className="gap-1 bg-green-50 text-green-700 border-green-200"><CheckCircle className="w-3 h-3" />Accepted</Badge>;
+      case 'REJECTED':
+        return <Badge variant="destructive" className="gap-1"><XCircle className="w-3 h-3" />Rejected</Badge>;
+      case 'PENDING':
+        return <Badge variant="secondary" className="gap-1"><Clock className="w-3 h-3" />Pending</Badge>;
+      default:
+        return null;
+    }
+  };
+
+  const getInspectionResultBadge = () => {
+    if (!data.inspectionResult) return null;
+
+    switch (data.inspectionResult) {
+      case 'PASSED':
+        return <Badge variant="default" className="gap-1 bg-green-50 text-green-700 border-green-200"><CheckCircle className="w-3 h-3" />Passed</Badge>;
+      case 'FAILED':
+        return <Badge variant="destructive" className="gap-1"><XCircle className="w-3 h-3" />Failed</Badge>;
+      case 'PENDING':
+        return <Badge variant="secondary" className="gap-1"><Clock className="w-3 h-3" />Pending</Badge>;
+      default:
+        return null;
     }
   };
 
   return (
     <PageContainer scrollable={true}>
       <div className="min-h-screen bg-gradient-to-br from-background to-muted/20 p-4 w-full transition-colors">
-        <div className="max-w-6xl mx-auto space-y-6">
+        <div className="max-w-7xl mx-auto space-y-6">
           {/* Header */}
           <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6 p-6 bg-card rounded-xl shadow-sm border">
             <div className="relative">
@@ -135,28 +175,28 @@ export default async function Page(props: PageProps) {
                       <Ruler className="w-5 h-5 text-primary" />
                       <div>
                         <p className="text-sm text-muted-foreground">Guide Bar Length</p>
-                        <p className="font-semibold">{data.guidBarLength}"</p>
+                        <p className="font-semibold">{data.guidBarLength ? `${data.guidBarLength}"` : 'Not specified'}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
                       <Zap className="w-5 h-5 text-primary" />
                       <div>
                         <p className="text-sm text-muted-foreground">Horse Power</p>
-                        <p className="font-semibold">{data.horsePower} HP</p>
+                        <p className="font-semibold">{data.horsePower ? `${data.horsePower} HP` : 'Not specified'}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
                       <Fuel className="w-5 h-5 text-primary" />
                       <div>
                         <p className="text-sm text-muted-foreground">Fuel Type</p>
-                        <p className="font-semibold">{data.fuelType}</p>
+                        <p className="font-semibold">{formatFuelType(data.fuelType)}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-3 p-3 bg-muted/30 rounded-lg">
                       <FileText className="w-5 h-5 text-primary" />
                       <div>
                         <p className="text-sm text-muted-foreground">Intended Use</p>
-                        <p className="font-semibold">{data.intendedUse.replace('_', ' ')}</p>
+                        <p className="font-semibold">{formatUseType(data.intendedUse)}</p>
                       </div>
                     </div>
                   </div>
@@ -173,7 +213,7 @@ export default async function Page(props: PageProps) {
                       </div>
                       <div>
                         <label className="text-sm text-muted-foreground">Date Acquired</label>
-                        <p className="font-medium">{new Date(data.dateAcquired).toLocaleDateString()}</p>
+                        <p className="font-medium">{formatDate(data.dateAcquired)}</p>
                       </div>
                       <div className="sm:col-span-2">
                         <label className="text-sm text-muted-foreground">Other Information</label>
@@ -182,6 +222,10 @@ export default async function Page(props: PageProps) {
                       <div>
                         <label className="text-sm text-muted-foreground">Equipment Type</label>
                         <p className="font-medium">{data.isNew ? "New Equipment" : "Renewal Registration"}</p>
+                      </div>
+                      <div>
+                        <label className="text-sm text-muted-foreground">Data Privacy Consent</label>
+                        <p className="font-medium">{data.dataPrivacyConsent ? "Consented" : "Not Consented"}</p>
                       </div>
                     </div>
                   </div>
@@ -199,7 +243,7 @@ export default async function Page(props: PageProps) {
                       </div>
                       <div>
                         <span className="text-muted-foreground">Valid Until:</span>
-                        <span className="ml-2 font-medium">{validUntil.toLocaleDateString()}</span>
+                        <span className="ml-2 font-medium">{formatDate(validUntil)}</span>
                       </div>
                       <div>
                         <span className="text-muted-foreground">Status:</span>
@@ -221,6 +265,357 @@ export default async function Page(props: PageProps) {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* Application Status and Processing */}
+              {(data.initialApplicationStatus || data.inspectionResult || data.orNumber || data.orDate || data.expiryDate) && (
+                <Card className="shadow-sm border-0 bg-card/50 backdrop-blur-sm">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-lg font-bold text-primary flex items-center gap-2">
+                      <FileCheck className="w-5 h-5" />
+                      Application Status & Processing
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {data.initialApplicationStatus && (
+                        <div className="space-y-2">
+                          <label className="text-sm text-muted-foreground">Initial Application Status</label>
+                          <div className="flex items-center gap-2">
+                            {getApplicationStatusBadge()}
+                          </div>
+                          {data.initialApplicationRemarks && (
+                            <p className="text-sm text-muted-foreground mt-1">{data.initialApplicationRemarks}</p>
+                          )}
+                        </div>
+                      )}
+
+                      {data.inspectionResult && (
+                        <div className="space-y-2">
+                          <label className="text-sm text-muted-foreground">Inspection Result</label>
+                          <div className="flex items-center gap-2">
+                            {getInspectionResultBadge()}
+                          </div>
+                          {data.inspectionRemarks && (
+                            <p className="text-sm text-muted-foreground mt-1">{data.inspectionRemarks}</p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
+                    {(data.orNumber || data.orDate || data.expiryDate) && (
+                      <>
+                        <Separator />
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                          {data.orNumber && (
+                            <div>
+                              <label className="text-sm text-muted-foreground">OR Number</label>
+                              <p className="font-medium">{data.orNumber}</p>
+                            </div>
+                          )}
+                          {data.orDate && (
+                            <div>
+                              <label className="text-sm text-muted-foreground">OR Date</label>
+                              <p className="font-medium">{formatDate(data.orDate)}</p>
+                            </div>
+                          )}
+                          {data.expiryDate && (
+                            <div>
+                              <label className="text-sm text-muted-foreground">Expiry Date</label>
+                              <p className="font-medium">{formatDate(data.expiryDate)}</p>
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Document Requirements */}
+              {(data.registrationApplicationUrl || data.officialReceiptUrl || data.spaUrl || data.stencilSerialNumberPictureUrl || data.chainsawPictureUrl) && (
+                <Card className="shadow-sm border-0 bg-card/50 backdrop-blur-sm">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-lg font-bold text-primary flex items-center gap-2">
+                      <FileText className="w-5 h-5" />
+                      Document Requirements
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {data.registrationApplicationUrl && (
+                        <div className="space-y-2">
+                          <label className="text-sm text-muted-foreground flex items-center gap-2">
+                            <FileText className="w-4 h-4" />
+                            Registration Application
+                          </label>
+                          <a
+                            href={data.registrationApplicationUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline text-sm font-medium flex items-center gap-1"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            View Document
+                          </a>
+                        </div>
+                      )}
+
+                      {data.officialReceiptUrl && (
+                        <div className="space-y-2">
+                          <label className="text-sm text-muted-foreground flex items-center gap-2">
+                            <FileText className="w-4 h-4" />
+                            Official Receipt
+                          </label>
+                          <a
+                            href={data.officialReceiptUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline text-sm font-medium flex items-center gap-1"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            View Document
+                          </a>
+                        </div>
+                      )}
+
+                      {data.spaUrl && (
+                        <div className="space-y-2">
+                          <label className="text-sm text-muted-foreground flex items-center gap-2">
+                            <FileText className="w-4 h-4" />
+                            SPA (Special Power of Attorney)
+                          </label>
+                          <a
+                            href={data.spaUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline text-sm font-medium flex items-center gap-1"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            View Document
+                          </a>
+                        </div>
+                      )}
+
+                      {data.stencilSerialNumberPictureUrl && (
+                        <div className="space-y-2">
+                          <label className="text-sm text-muted-foreground flex items-center gap-2">
+                            <FileText className="w-4 h-4" />
+                            Stencil Serial Number Picture
+                          </label>
+                          <a
+                            href={data.stencilSerialNumberPictureUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline text-sm font-medium flex items-center gap-1"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            View Document
+                          </a>
+                        </div>
+                      )}
+
+                      {data.chainsawPictureUrl && (
+                        <div className="space-y-2">
+                          <label className="text-sm text-muted-foreground flex items-center gap-2">
+                            <FileText className="w-4 h-4" />
+                            Chainsaw Picture
+                          </label>
+                          <a
+                            href={data.chainsawPictureUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline text-sm font-medium flex items-center gap-1"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            View Document
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Renewal Registration Requirements */}
+              {(data.previousCertificateOfRegistrationNumber || data.renewalRegistrationApplicationUrl || data.renewalPreviousCertificateOfRegistrationUrl) && (
+                <Card className="shadow-sm border-0 bg-card/50 backdrop-blur-sm">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-lg font-bold text-primary flex items-center gap-2">
+                      <FileCheck className="w-5 h-5" />
+                      Renewal Registration Requirements
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {data.previousCertificateOfRegistrationNumber && (
+                        <div className="space-y-2">
+                          <label className="text-sm text-muted-foreground">Previous Certificate Number</label>
+                          <p className="font-medium">{data.previousCertificateOfRegistrationNumber}</p>
+                        </div>
+                      )}
+
+                      {data.renewalRegistrationApplicationUrl && (
+                        <div className="space-y-2">
+                          <label className="text-sm text-muted-foreground flex items-center gap-2">
+                            <FileText className="w-4 h-4" />
+                            Renewal Registration Application
+                          </label>
+                          <a
+                            href={data.renewalRegistrationApplicationUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline text-sm font-medium flex items-center gap-1"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            View Document
+                          </a>
+                        </div>
+                      )}
+
+                      {data.renewalPreviousCertificateOfRegistrationUrl && (
+                        <div className="space-y-2">
+                          <label className="text-sm text-muted-foreground flex items-center gap-2">
+                            <FileText className="w-4 h-4" />
+                            Previous Certificate of Registration
+                          </label>
+                          <a
+                            href={data.renewalPreviousCertificateOfRegistrationUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline text-sm font-medium flex items-center gap-1"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            View Document
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Additional Requirements */}
+              {(data.forestTenureAgreementUrl || data.businessPermitUrl || data.certificateOfRegistrationUrl || data.lguBusinessPermitUrl || data.woodProcessingPermitUrl || data.governmentCertificationUrl) && (
+                <Card className="shadow-sm border-0 bg-card/50 backdrop-blur-sm">
+                  <CardHeader className="pb-4">
+                    <CardTitle className="text-lg font-bold text-primary flex items-center gap-2">
+                      <Building className="w-5 h-5" />
+                      Additional Requirements
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      {data.forestTenureAgreementUrl && (
+                        <div className="space-y-2">
+                          <label className="text-sm text-muted-foreground flex items-center gap-2">
+                            <FileText className="w-4 h-4" />
+                            Forest Tenure Agreement
+                          </label>
+                          <a
+                            href={data.forestTenureAgreementUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline text-sm font-medium flex items-center gap-1"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            View Document
+                          </a>
+                        </div>
+                      )}
+
+                      {data.businessPermitUrl && (
+                        <div className="space-y-2">
+                          <label className="text-sm text-muted-foreground flex items-center gap-2">
+                            <FileText className="w-4 h-4" />
+                            Business Permit
+                          </label>
+                          <a
+                            href={data.businessPermitUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline text-sm font-medium flex items-center gap-1"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            View Document
+                          </a>
+                        </div>
+                      )}
+
+                      {data.certificateOfRegistrationUrl && (
+                        <div className="space-y-2">
+                          <label className="text-sm text-muted-foreground flex items-center gap-2">
+                            <FileText className="w-4 h-4" />
+                            Certificate of Registration
+                          </label>
+                          <a
+                            href={data.certificateOfRegistrationUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline text-sm font-medium flex items-center gap-1"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            View Document
+                          </a>
+                        </div>
+                      )}
+
+                      {data.lguBusinessPermitUrl && (
+                        <div className="space-y-2">
+                          <label className="text-sm text-muted-foreground flex items-center gap-2">
+                            <FileText className="w-4 h-4" />
+                            LGU Business Permit
+                          </label>
+                          <a
+                            href={data.lguBusinessPermitUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline text-sm font-medium flex items-center gap-1"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            View Document
+                          </a>
+                        </div>
+                      )}
+
+                      {data.woodProcessingPermitUrl && (
+                        <div className="space-y-2">
+                          <label className="text-sm text-muted-foreground flex items-center gap-2">
+                            <FileText className="w-4 h-4" />
+                            Wood Processing Permit
+                          </label>
+                          <a
+                            href={data.woodProcessingPermitUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline text-sm font-medium flex items-center gap-1"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            View Document
+                          </a>
+                        </div>
+                      )}
+
+                      {data.governmentCertificationUrl && (
+                        <div className="space-y-2">
+                          <label className="text-sm text-muted-foreground flex items-center gap-2">
+                            <FileText className="w-4 h-4" />
+                            Government Certification
+                          </label>
+                          <a
+                            href={data.governmentCertificationUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-primary hover:underline text-sm font-medium flex items-center gap-1"
+                          >
+                            <ExternalLink className="w-3 h-3" />
+                            View Document
+                          </a>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             {/* Owner Information */}
@@ -311,14 +706,14 @@ export default async function Page(props: PageProps) {
                   <div className="space-y-2">
                     <label className="text-sm text-muted-foreground">Date Registered</label>
                     <p className="font-medium text-sm">
-                      {new Date(data.createdAt).toLocaleDateString()} at {new Date(data.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {formatDateTime(data.createdAt)}
                     </p>
                   </div>
                   <Separator />
                   <div className="space-y-2">
                     <label className="text-sm text-muted-foreground">Last Updated</label>
                     <p className="font-medium text-sm">
-                      {new Date(data.updatedAt).toLocaleDateString()} at {new Date(data.updatedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      {formatDateTime(data.updatedAt)}
                     </p>
                   </div>
                 </CardContent>
