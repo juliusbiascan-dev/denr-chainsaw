@@ -12,6 +12,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { deleteEquipmentAction } from '@/actions/equipment';
 import { AlertModal } from '@/components/modal/alert-modal';
+import { formatUseType, formatFuelType, formatDate } from '@/lib/format';
 
 // Inline Actions Component
 const InlineActions = ({ equipment }: { equipment: Equipment }) => {
@@ -177,7 +178,7 @@ export const columns: ColumnDef<Equipment>[] = [
       const fuelType = cell.getValue<Equipment['fuelType']>();
       return (
         <Badge variant='outline' className='capitalize'>
-          {fuelType?.toLowerCase().replace('_', ' ')}
+          {formatFuelType(fuelType)}
         </Badge>
       );
     },
@@ -199,7 +200,7 @@ export const columns: ColumnDef<Equipment>[] = [
       const useType = cell.getValue<Equipment['intendedUse']>();
       return (
         <Badge variant='outline' className='capitalize'>
-          {useType?.toLowerCase().replace(/_/g, ' ')}
+          {formatUseType(useType)}
         </Badge>
       );
     },
@@ -235,12 +236,8 @@ export const columns: ColumnDef<Equipment>[] = [
       <DataTableColumnHeader column={column} title='Date Acquired' />
     ),
     cell: ({ cell }) => {
-      const date = new Date(cell.getValue<string>());
-      return <div>{date.toLocaleDateString('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric'
-      })}</div>;
+      const date = cell.getValue<string>();
+      return <div>{formatDate(date)}</div>;
     }
   },
   {
@@ -249,12 +246,8 @@ export const columns: ColumnDef<Equipment>[] = [
       <DataTableColumnHeader column={column} title='Date Registered' />
     ),
     cell: ({ cell }) => {
-      const date = new Date(cell.getValue<string>());
-      return <div>{date.toLocaleDateString('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric'
-      })}</div>;
+      const date = cell.getValue<string>();
+      return <div>{formatDate(date)}</div>;
     }
   },
   {
@@ -263,12 +256,8 @@ export const columns: ColumnDef<Equipment>[] = [
       <DataTableColumnHeader column={column} title='Last Updated' />
     ),
     cell: ({ cell }) => {
-      const date = new Date(cell.getValue<string>());
-      return <div>{date.toLocaleDateString('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric'
-      })}</div>;
+      const date = cell.getValue<string>();
+      return <div>{formatDate(date)}</div>;
     }
   },
   {

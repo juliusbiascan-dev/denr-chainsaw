@@ -121,7 +121,7 @@ export function DataTableDateFilter<TData>({
     if (range.from && range.to) {
       return `${formatDate(range.from)} - ${formatDate(range.to)}`;
     }
-    return formatDate(range.from ?? range.to);
+    return formatDate(range.from ?? range.to!);
   }, []);
 
   const label = React.useMemo(() => {

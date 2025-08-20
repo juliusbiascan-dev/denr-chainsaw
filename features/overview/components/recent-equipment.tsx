@@ -8,36 +8,70 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { db } from '@/lib/db';
-
-// Equipment type definition
-type Equipment = {
-  id: string;
-  ownerFirstName: string;
-  ownerLastName: string;
-  ownerMiddleName: string;
-  brand: string;
-  model: string;
-  serialNumber: string;
-  guidBarLength: number;
-  horsePower: number;
-  fuelType: string;
-  dateAcquired: Date;
-  stencilOfSerialNo: string;
-  otherInfo: string;
-  intendedUse: string;
-  isNew: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-};
+import { Equipment } from '@/constants/data';
+import { formatFuelType, formatDate } from '@/lib/format';
 
 // Function to get recent equipment from database
 async function getRecentEquipments(): Promise<Equipment[]> {
   try {
-    return await db.equipment.findMany({
+    const equipments = await db.equipment.findMany({
       take: 5,
       orderBy: {
         createdAt: 'desc'
       }
+    });
+
+    // Transform database equipment to match the Equipment type
+    return equipments.map((equipment) => {
+      // Check if the equipment is expired (2 years validity from date acquired)
+      const dateAcquired = new Date(equipment.dateAcquired);
+      const currentDate = new Date();
+      const twoYearsFromAcquisition = new Date(dateAcquired);
+      twoYearsFromAcquisition.setFullYear(dateAcquired.getFullYear() + 2);
+      const isExpired = currentDate > twoYearsFromAcquisition;
+
+      return {
+        id: equipment.id,
+        // Owner Information
+        ownerFirstName: equipment.ownerFirstName,
+        ownerLastName: equipment.ownerLastName,
+        ownerMiddleName: equipment.ownerMiddleName,
+        ownerAddress: equipment.ownerAddress,
+        ownerContactNumber: equipment.ownerContactNumber,
+        ownerEmail: equipment.ownerEmail,
+        ownerPreferContactMethod: equipment.ownerPreferContactMethod,
+        ownerIdUrl: equipment.ownerIdUrl || undefined,
+        // Equipment Information
+        brand: equipment.brand,
+        model: equipment.model,
+        serialNumber: equipment.serialNumber,
+        guidBarLength: equipment.guidBarLength || undefined,
+        horsePower: equipment.horsePower || undefined,
+        fuelType: equipment.fuelType,
+        dateAcquired: dateAcquired.toISOString(),
+        stencilOfSerialNo: equipment.stencilOfSerialNo,
+        otherInfo: equipment.otherInfo,
+        intendedUse: equipment.intendedUse,
+        isNew: equipment.isNew,
+        createdAt: new Date(equipment.createdAt).toISOString(),
+        updatedAt: new Date(equipment.updatedAt).toISOString(),
+        status: isExpired ? 'inactive' : 'active',
+        // Document Requirements
+        registrationApplicationUrl: equipment.registrationApplicationUrl || undefined,
+        officialReceiptUrl: equipment.officialReceiptUrl || undefined,
+        spaUrl: equipment.spaUrl || undefined,
+        stencilSerialNumberPictureUrl: equipment.stencilSerialNumberPictureUrl || undefined,
+        chainsawPictureUrl: equipment.chainsawPictureUrl || undefined,
+        // Additional Requirements
+        forestTenureAgreementUrl: equipment.forestTenureAgreementUrl || undefined,
+        businessPermitUrl: equipment.businessPermitUrl || undefined,
+        certificateOfRegistrationUrl: equipment.certificateOfRegistrationUrl || undefined,
+        lguBusinessPermitUrl: equipment.lguBusinessPermitUrl || undefined,
+        woodProcessingPermitUrl: equipment.woodProcessingPermitUrl || undefined,
+        governmentCertificationUrl: equipment.governmentCertificationUrl || undefined,
+        // Data Privacy Consent
+        dataPrivacyConsent: equipment.dataPrivacyConsent
+      };
     });
   } catch (error) {
     console.error('Error fetching recent equipment:', error);
@@ -45,11 +79,11 @@ async function getRecentEquipments(): Promise<Equipment[]> {
   }
 }
 
-
 // Function to check if equipment is expiring soon
-function isExpiringSoon(dateAcquired: Date): boolean {
+function isExpiringSoon(dateAcquired: string): boolean {
   const now = new Date();
-  const validUntil = new Date(dateAcquired.getTime() + 2 * 365 * 24 * 60 * 60 * 1000);
+  const acquiredDate = new Date(dateAcquired);
+  const validUntil = new Date(acquiredDate.getTime() + 2 * 365 * 24 * 60 * 60 * 1000);
   const thirtyDaysFromNow = new Date();
   thirtyDaysFromNow.setDate(now.getDate() + 30);
 
@@ -57,23 +91,16 @@ function isExpiringSoon(dateAcquired: Date): boolean {
 }
 
 // Function to check if equipment is expired
-function isExpired(dateAcquired: Date): boolean {
-  const validUntil = new Date(dateAcquired.getTime() + 2 * 365 * 24 * 60 * 60 * 1000);
+function isExpired(dateAcquired: string): boolean {
+  const acquiredDate = new Date(dateAcquired);
+  const validUntil = new Date(acquiredDate.getTime() + 2 * 365 * 24 * 60 * 60 * 1000);
   return validUntil < new Date();
 }
 
 // Function to get valid until date
-function getValidUntilDate(dateAcquired: Date): Date {
-  return new Date(dateAcquired.getTime() + 2 * 365 * 24 * 60 * 60 * 1000);
-}
-
-// Function to format date
-function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric'
-  }).format(date);
+function getValidUntilDate(dateAcquired: string): Date {
+  const acquiredDate = new Date(dateAcquired);
+  return new Date(acquiredDate.getTime() + 2 * 365 * 24 * 60 * 60 * 1000);
 }
 
 // Function to format owner's full name
@@ -117,7 +144,7 @@ export async function RecentEquipment() {
                 </p>
                 <div className="flex flex-wrap items-center gap-2">
                   <Badge variant="outline" className="text-xs">
-                    {equipment.fuelType}
+                    {formatFuelType(equipment.fuelType)}
                   </Badge>
                   {isExpired(equipment.dateAcquired) && (
                     <Badge variant="destructive" className="text-xs">

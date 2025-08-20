@@ -14,6 +14,10 @@ import { useDataTable } from '@/hooks/use-data-table';
 
 import { ColumnDef } from '@tanstack/react-table';
 import { parseAsInteger, useQueryState } from 'nuqs';
+import { Folder } from 'lucide-react';
+import { EmptyPlaceholder } from '@/components/empty-placeholder';
+import { Button } from '@/components/ui/button';
+import { useRouter } from 'next/navigation';
 
 interface EquipmentTableParams {
   data: Equipment[];
@@ -28,6 +32,7 @@ export function EquipmentTable({
   columns,
   isLoading = false
 }: EquipmentTableParams) {
+  const router = useRouter();
   const [pageSize] = useQueryState('perPage', parseAsInteger.withDefault(10));
 
   const pageCount = Math.ceil(totalItems / pageSize);
@@ -128,9 +133,15 @@ export function EquipmentTable({
               />
             ))}
             {table.getRowModel().rows.length === 0 && (
-              <div className="text-center py-8">
-                <p className="text-muted-foreground">No results found</p>
-              </div>
+              <EmptyPlaceholder
+                icon={<Folder className="h-12 w-12 text-muted-foreground" />}
+                title="No equipments yet"
+                description="Register your first equipment to get started."
+              >
+                <Button onClick={() => router.push('/dashboard/equipments/new')}>
+                  Add Equipment
+                </Button>
+              </EmptyPlaceholder>
             )}
 
             {/* Mobile Pagination */}

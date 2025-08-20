@@ -1,7 +1,7 @@
 import { NavItem } from '@/types';
 
 export type FuelType = 'GAS' | 'DIESEL' | 'ELECTRIC' | 'OTHER';
-export type UseType = 'WOOD_PROCESSING' | 'TREE_CUTTING' | 'LEGAL_PURPOSES' | 'OFFICIAL_TREE_CUTTING' | 'OTHER';
+export type UseType = 'WOOD_PROCESSING' | 'TREE_CUTTING_PRIVATE_PLANTATION' | 'GOVT_LEGAL_PURPOSES' | 'OFFICIAL_TREE_CUTTING_BARANGAY' | 'OTHER';
 
 export type Equipment = {
   id: string;
@@ -10,16 +10,17 @@ export type Equipment = {
   ownerLastName: string;
   ownerMiddleName: string;
   ownerAddress: string;
-  ownerContactNumber?: string;
-  ownerEmail?: string;
-  ownerPreferContactMethod?: string;
+  ownerContactNumber: string;
+  ownerEmail: string;
+  ownerPreferContactMethod: string;
   ownerIdUrl?: string;
+
   // Equipment Information
   brand: string;
   model: string;
   serialNumber: string;
-  guidBarLength: number;
-  horsePower: number;
+  guidBarLength?: number;
+  horsePower?: number;
   fuelType: FuelType;
   dateAcquired: string;
   stencilOfSerialNo: string;
@@ -29,6 +30,24 @@ export type Equipment = {
   createdAt: string;
   updatedAt: string;
   status: 'active' | 'inactive';
+
+  // Document Requirements
+  registrationApplicationUrl?: string;
+  officialReceiptUrl?: string;
+  spaUrl?: string;
+  stencilSerialNumberPictureUrl?: string;
+  chainsawPictureUrl?: string;
+
+  // Additional Requirements
+  forestTenureAgreementUrl?: string;
+  businessPermitUrl?: string;
+  certificateOfRegistrationUrl?: string;
+  lguBusinessPermitUrl?: string;
+  woodProcessingPermitUrl?: string;
+  governmentCertificationUrl?: string;
+
+  // Data Privacy Consent
+  dataPrivacyConsent: boolean;
 };
 
 //Info: The following data is used for the sidebar navigation and Cmd K bar.

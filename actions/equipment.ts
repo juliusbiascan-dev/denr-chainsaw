@@ -17,14 +17,14 @@ export const createEquipmentAction = async (values: z.infer<typeof EquipmentSche
   const {
     // Owner Information
     ownerFirstName,
-    ownerLastName,
     ownerMiddleName,
+    ownerLastName,
     ownerAddress,
     ownerContactNumber,
     ownerEmail,
     ownerPreferContactMethod,
     ownerIdUrl,
-    // Equipment Information
+    // Chainsaw Information
     brand,
     model,
     serialNumber,
@@ -35,21 +35,36 @@ export const createEquipmentAction = async (values: z.infer<typeof EquipmentSche
     stencilOfSerialNo,
     otherInfo,
     intendedUse,
-    isNew
+    isNew,
+    // Document Requirements
+    registrationApplicationUrl,
+    officialReceiptUrl,
+    spaUrl,
+    stencilSerialNumberPictureUrl,
+    chainsawPictureUrl,
+    // Additional Requirements
+    forestTenureAgreementUrl,
+    businessPermitUrl,
+    certificateOfRegistrationUrl,
+    lguBusinessPermitUrl,
+    woodProcessingPermitUrl,
+    governmentCertificationUrl,
+    // Data Privacy Consent
+    dataPrivacyConsent
   } = validatedFields.data;
 
   try {
     const result = await createEquipment({
       // Owner Information
       ownerFirstName,
-      ownerLastName,
       ownerMiddleName,
+      ownerLastName,
       ownerAddress,
       ownerContactNumber,
       ownerEmail,
       ownerPreferContactMethod,
       ownerIdUrl,
-      // Equipment Information
+      // Chainsaw Information
       brand,
       model,
       serialNumber,
@@ -60,7 +75,22 @@ export const createEquipmentAction = async (values: z.infer<typeof EquipmentSche
       stencilOfSerialNo,
       otherInfo,
       intendedUse,
-      isNew
+      isNew,
+      // Document Requirements
+      registrationApplicationUrl,
+      officialReceiptUrl,
+      spaUrl,
+      stencilSerialNumberPictureUrl,
+      chainsawPictureUrl,
+      // Additional Requirements
+      forestTenureAgreementUrl,
+      businessPermitUrl,
+      certificateOfRegistrationUrl,
+      lguBusinessPermitUrl,
+      woodProcessingPermitUrl,
+      governmentCertificationUrl,
+      // Data Privacy Consent
+      dataPrivacyConsent
     });
 
     if (result.success) {
@@ -89,14 +119,14 @@ export const updateEquipmentAction = async (
   const {
     // Owner Information
     ownerFirstName,
-    ownerLastName,
     ownerMiddleName,
+    ownerLastName,
     ownerAddress,
     ownerContactNumber,
     ownerEmail,
     ownerPreferContactMethod,
     ownerIdUrl,
-    // Equipment Information
+    // Chainsaw Information
     brand,
     model,
     serialNumber,
@@ -107,7 +137,22 @@ export const updateEquipmentAction = async (
     stencilOfSerialNo,
     otherInfo,
     intendedUse,
-    isNew
+    isNew,
+    // Document Requirements
+    registrationApplicationUrl,
+    officialReceiptUrl,
+    spaUrl,
+    stencilSerialNumberPictureUrl,
+    chainsawPictureUrl,
+    // Additional Requirements
+    forestTenureAgreementUrl,
+    businessPermitUrl,
+    certificateOfRegistrationUrl,
+    lguBusinessPermitUrl,
+    woodProcessingPermitUrl,
+    governmentCertificationUrl,
+    // Data Privacy Consent
+    dataPrivacyConsent
   } = validatedFields.data;
 
   try {
@@ -121,14 +166,14 @@ export const updateEquipmentAction = async (
     const result = await updateEquipment(id, {
       // Owner Information
       ownerFirstName,
-      ownerLastName,
       ownerMiddleName,
+      ownerLastName,
       ownerAddress,
       ownerContactNumber,
       ownerEmail,
       ownerPreferContactMethod,
       ownerIdUrl,
-      // Equipment Information
+      // Chainsaw Information
       brand,
       model,
       serialNumber,
@@ -139,7 +184,22 @@ export const updateEquipmentAction = async (
       stencilOfSerialNo,
       otherInfo,
       intendedUse,
-      isNew
+      isNew,
+      // Document Requirements
+      registrationApplicationUrl,
+      officialReceiptUrl,
+      spaUrl,
+      stencilSerialNumberPictureUrl,
+      chainsawPictureUrl,
+      // Additional Requirements
+      forestTenureAgreementUrl,
+      businessPermitUrl,
+      certificateOfRegistrationUrl,
+      lguBusinessPermitUrl,
+      woodProcessingPermitUrl,
+      governmentCertificationUrl,
+      // Data Privacy Consent
+      dataPrivacyConsent
     });
 
     if (result.success) {
@@ -202,14 +262,14 @@ export const bulkImportEquipmentAction = async (equipmentsData: any[]) => {
         const {
           // Owner Information
           ownerFirstName,
-          ownerLastName,
           ownerMiddleName,
+          ownerLastName,
           ownerAddress,
           ownerContactNumber,
           ownerEmail,
           ownerPreferContactMethod,
           ownerIdUrl,
-          // Equipment Information
+          // Chainsaw Information
           brand,
           model,
           serialNumber,
@@ -220,20 +280,35 @@ export const bulkImportEquipmentAction = async (equipmentsData: any[]) => {
           stencilOfSerialNo,
           otherInfo,
           intendedUse,
-          isNew
+          isNew,
+          // Document Requirements
+          registrationApplicationUrl,
+          officialReceiptUrl,
+          spaUrl,
+          stencilSerialNumberPictureUrl,
+          chainsawPictureUrl,
+          // Additional Requirements
+          forestTenureAgreementUrl,
+          businessPermitUrl,
+          certificateOfRegistrationUrl,
+          lguBusinessPermitUrl,
+          woodProcessingPermitUrl,
+          governmentCertificationUrl,
+          // Data Privacy Consent
+          dataPrivacyConsent
         } = validatedFields.data;
 
         const result = await createEquipment({
           // Owner Information
           ownerFirstName,
-          ownerLastName,
           ownerMiddleName,
+          ownerLastName,
           ownerAddress,
           ownerContactNumber,
           ownerEmail,
           ownerPreferContactMethod,
           ownerIdUrl,
-          // Equipment Information
+          // Chainsaw Information
           brand,
           model,
           serialNumber,
@@ -244,7 +319,22 @@ export const bulkImportEquipmentAction = async (equipmentsData: any[]) => {
           stencilOfSerialNo,
           otherInfo,
           intendedUse,
-          isNew
+          isNew,
+          // Document Requirements
+          registrationApplicationUrl,
+          officialReceiptUrl,
+          spaUrl,
+          stencilSerialNumberPictureUrl,
+          chainsawPictureUrl,
+          // Additional Requirements
+          forestTenureAgreementUrl,
+          businessPermitUrl,
+          certificateOfRegistrationUrl,
+          lguBusinessPermitUrl,
+          woodProcessingPermitUrl,
+          governmentCertificationUrl,
+          // Data Privacy Consent
+          dataPrivacyConsent
         });
 
         if (result.success) {

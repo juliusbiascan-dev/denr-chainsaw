@@ -88,7 +88,22 @@ export default async function EquipmentListingPage({ }: EquipmentListingPage) {
         isNew: equipment.isNew,
         createdAt: new Date(equipment.createdAt).toISOString(),
         updatedAt: new Date(equipment.updatedAt).toISOString(),
-        status: isExpired ? 'inactive' : 'active'
+        status: isExpired ? 'inactive' : 'active',
+        // Document Requirements
+        registrationApplicationUrl: equipment.registrationApplicationUrl,
+        officialReceiptUrl: equipment.officialReceiptUrl,
+        spaUrl: equipment.spaUrl,
+        stencilSerialNumberPictureUrl: equipment.stencilSerialNumberPictureUrl,
+        chainsawPictureUrl: equipment.chainsawPictureUrl,
+        // Additional Requirements
+        forestTenureAgreementUrl: equipment.forestTenureAgreementUrl,
+        businessPermitUrl: equipment.businessPermitUrl,
+        certificateOfRegistrationUrl: equipment.certificateOfRegistrationUrl,
+        lguBusinessPermitUrl: equipment.lguBusinessPermitUrl,
+        woodProcessingPermitUrl: equipment.woodProcessingPermitUrl,
+        governmentCertificationUrl: equipment.governmentCertificationUrl,
+        // Data Privacy Consent
+        dataPrivacyConsent: equipment.dataPrivacyConsent
       };
     });
 

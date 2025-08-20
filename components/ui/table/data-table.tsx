@@ -1,3 +1,4 @@
+'use client';
 import { type Table as TanstackTable, flexRender } from '@tanstack/react-table';
 import * as React from 'react';
 
@@ -15,6 +16,9 @@ import { ScrollArea, ScrollBar } from '@/components/ui/scroll-area';
 import { ChevronDownIcon, ChevronRightIcon } from '@radix-ui/react-icons';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
+import { EmptyPlaceholder } from '@/components/empty-placeholder';
+import { Folder } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface DataTableProps<TData> extends React.ComponentProps<'div'> {
   table: TanstackTable<TData>;
@@ -28,6 +32,7 @@ export function DataTable<TData>({
   children,
   expandableContent
 }: DataTableProps<TData>) {
+  const router = useRouter();
   const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
 
   const toggleRowExpansion = (rowId: string) => {
@@ -148,7 +153,15 @@ export function DataTable<TData>({
                       colSpan={table.getAllColumns().length + (expandableContent ? 1 : 0)}
                       className='h-24 text-center'
                     >
-                      No results.
+                      <EmptyPlaceholder
+                        icon={<Folder className="h-12 w-12 text-muted-foreground" />}
+                        title="No equipments yet"
+                        description="Register your first equipment to get started."
+                      >
+                        <Button onClick={() => router.push('/dashboard/equipments/new')}>
+                          Add Equipment
+                        </Button>
+                      </EmptyPlaceholder>
                     </TableCell>
                   </TableRow>
                 )}

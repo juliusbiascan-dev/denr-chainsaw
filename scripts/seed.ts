@@ -2,7 +2,7 @@ import { PrismaClient, FuelType, UseType, DocType } from '../lib/generated/prism
 
 // Arrays of enum values
 const fuelTypes: FuelType[] = ['GAS', 'DIESEL', 'ELECTRIC', 'OTHER']
-const useTypes: UseType[] = ['WOOD_PROCESSING', 'TREE_CUTTING', 'LEGAL_PURPOSES', 'OFFICIAL_TREE_CUTTING', 'OTHER']
+const useTypes: UseType[] = ['WOOD_PROCESSING', 'TREE_CUTTING_PRIVATE_PLANTATION', 'GOVT_LEGAL_PURPOSES', 'OFFICIAL_TREE_CUTTING_BARANGAY', 'OTHER']
 
 const prisma = new PrismaClient()
 

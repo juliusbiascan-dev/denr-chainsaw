@@ -87,7 +87,7 @@ export const getEquipments = async ({
         ['GAS', 'DIESEL', 'ELECTRIC', 'OTHER'].includes(cat)
       );
       const useTypeCategories = categories.filter(cat =>
-        ['WOOD_PROCESSING', 'TREE_CUTTING', 'LEGAL_PURPOSES', 'OFFICIAL_TREE_CUTTING', 'OTHER'].includes(cat)
+        ['WOOD_PROCESSING', 'TREE_CUTTING_PRIVATE_PLANTATION', 'GOVT_LEGAL_PURPOSES', 'OFFICIAL_TREE_CUTTING_BARANGAY', 'OTHER'].includes(cat)
       );
 
       console.log('Filtered categories:', { fuelTypeCategories, useTypeCategories });
@@ -184,27 +184,45 @@ export const getEquipmentById = async (id: string) => {
 
 export const createEquipment = async (data: {
   // Owner Information
-  ownerFirstName?: string;
-  ownerLastName?: string;
-  ownerMiddleName?: string;
-  ownerAddress?: string;
-  ownerContactNumber?: string;
-  ownerEmail?: string;
-  ownerPreferContactMethod?: string;
+  ownerFirstName: string;
+  ownerMiddleName: string;
+  ownerLastName: string;
+  ownerAddress: string;
+  ownerContactNumber: string;
+  ownerEmail: string;
+  ownerPreferContactMethod: string;
   ownerIdUrl?: string;
 
-  // Equipment Information
+  // Chainsaw Information
   brand: string;
   model: string;
   serialNumber: string;
-  guidBarLength: number;
-  horsePower: number;
+  guidBarLength?: number;
+  horsePower?: number;
   fuelType: "GAS" | "DIESEL" | "ELECTRIC" | "OTHER";
   dateAcquired: Date;
   stencilOfSerialNo: string;
   otherInfo: string;
-  intendedUse: "WOOD_PROCESSING" | "TREE_CUTTING" | "LEGAL_PURPOSES" | "OFFICIAL_TREE_CUTTING" | "OTHER";
+  intendedUse: "WOOD_PROCESSING" | "TREE_CUTTING_PRIVATE_PLANTATION" | "GOVT_LEGAL_PURPOSES" | "OFFICIAL_TREE_CUTTING_BARANGAY" | "OTHER";
   isNew: boolean;
+
+  // Document Requirements
+  registrationApplicationUrl?: string;
+  officialReceiptUrl?: string;
+  spaUrl?: string;
+  stencilSerialNumberPictureUrl?: string;
+  chainsawPictureUrl?: string;
+
+  // Additional Requirements
+  forestTenureAgreementUrl?: string;
+  businessPermitUrl?: string;
+  certificateOfRegistrationUrl?: string;
+  lguBusinessPermitUrl?: string;
+  woodProcessingPermitUrl?: string;
+  governmentCertificationUrl?: string;
+
+  // Data Privacy Consent
+  dataPrivacyConsent: boolean;
 }) => {
   try {
     // Validate required fields
@@ -220,27 +238,45 @@ export const createEquipment = async (data: {
     const newEquipment = await db.equipment.create({
       data: {
         // Owner Information
-        ownerFirstName: data.ownerFirstName?.trim() || '',
-        ownerLastName: data.ownerLastName?.trim() || '',
-        ownerMiddleName: data.ownerMiddleName?.trim() || '',
-        ownerAddress: data.ownerAddress?.trim() || '',
-        ownerContactNumber: data.ownerContactNumber?.trim() || '',
-        ownerEmail: data.ownerEmail?.trim() || '',
-        ownerPreferContactMethod: data.ownerPreferContactMethod?.trim() || '',
+        ownerFirstName: data.ownerFirstName.trim(),
+        ownerMiddleName: data.ownerMiddleName.trim(),
+        ownerLastName: data.ownerLastName.trim(),
+        ownerAddress: data.ownerAddress.trim(),
+        ownerContactNumber: data.ownerContactNumber.trim(),
+        ownerEmail: data.ownerEmail.trim(),
+        ownerPreferContactMethod: data.ownerPreferContactMethod,
         ownerIdUrl: data.ownerIdUrl?.trim() || '',
 
-        // Equipment Information
+        // Chainsaw Information
         brand: data.brand.trim(),
         model: data.model.trim(),
         serialNumber: data.serialNumber.trim(),
-        guidBarLength: data.guidBarLength,
-        horsePower: data.horsePower,
+        guidBarLength: data.guidBarLength ?? null,
+        horsePower: data.horsePower ?? null,
         fuelType: data.fuelType,
         dateAcquired: data.dateAcquired,
         stencilOfSerialNo: data.stencilOfSerialNo.trim(),
         otherInfo: data.otherInfo.trim(),
-        intendedUse: data.intendedUse,
-        isNew: data.isNew
+        intendedUse: data.intendedUse as UseType,
+        isNew: data.isNew,
+
+        // Document Requirements
+        registrationApplicationUrl: data.registrationApplicationUrl?.trim() || '',
+        officialReceiptUrl: data.officialReceiptUrl?.trim() || '',
+        spaUrl: data.spaUrl?.trim() || '',
+        stencilSerialNumberPictureUrl: data.stencilSerialNumberPictureUrl?.trim() || '',
+        chainsawPictureUrl: data.chainsawPictureUrl?.trim() || '',
+
+        // Additional Requirements
+        forestTenureAgreementUrl: data.forestTenureAgreementUrl?.trim() || '',
+        businessPermitUrl: data.businessPermitUrl?.trim() || '',
+        certificateOfRegistrationUrl: data.certificateOfRegistrationUrl?.trim() || '',
+        lguBusinessPermitUrl: data.lguBusinessPermitUrl?.trim() || '',
+        woodProcessingPermitUrl: data.woodProcessingPermitUrl?.trim() || '',
+        governmentCertificationUrl: data.governmentCertificationUrl?.trim() || '',
+
+        // Data Privacy Consent
+        dataPrivacyConsent: data.dataPrivacyConsent
       }
     });
 
@@ -265,15 +301,15 @@ export const createEquipment = async (data: {
 export const updateEquipment = async (id: string, data: {
   // Owner Information
   ownerFirstName?: string;
-  ownerLastName?: string;
   ownerMiddleName?: string;
+  ownerLastName?: string;
   ownerAddress?: string;
   ownerContactNumber?: string;
   ownerEmail?: string;
   ownerPreferContactMethod?: string;
   ownerIdUrl?: string;
 
-  // Equipment Information
+  // Chainsaw Information
   brand?: string;
   model?: string;
   serialNumber?: string;
@@ -283,8 +319,26 @@ export const updateEquipment = async (id: string, data: {
   dateAcquired?: Date;
   stencilOfSerialNo?: string;
   otherInfo?: string;
-  intendedUse?: "WOOD_PROCESSING" | "TREE_CUTTING" | "LEGAL_PURPOSES" | "OFFICIAL_TREE_CUTTING" | "OTHER";
+  intendedUse?: "WOOD_PROCESSING" | "TREE_CUTTING_PRIVATE_PLANTATION" | "GOVT_LEGAL_PURPOSES" | "OFFICIAL_TREE_CUTTING_BARANGAY" | "OTHER";
   isNew?: boolean;
+
+  // Document Requirements
+  registrationApplicationUrl?: string;
+  officialReceiptUrl?: string;
+  spaUrl?: string;
+  stencilSerialNumberPictureUrl?: string;
+  chainsawPictureUrl?: string;
+
+  // Additional Requirements
+  forestTenureAgreementUrl?: string;
+  businessPermitUrl?: string;
+  certificateOfRegistrationUrl?: string;
+  lguBusinessPermitUrl?: string;
+  woodProcessingPermitUrl?: string;
+  governmentCertificationUrl?: string;
+
+  // Data Privacy Consent
+  dataPrivacyConsent?: boolean;
 }) => {
   try {
     // Validate that equipment exists
@@ -305,15 +359,15 @@ export const updateEquipment = async (id: string, data: {
 
     // Owner Information
     if (data.ownerFirstName !== undefined) updateData.ownerFirstName = data.ownerFirstName.trim();
-    if (data.ownerLastName !== undefined) updateData.ownerLastName = data.ownerLastName.trim();
     if (data.ownerMiddleName !== undefined) updateData.ownerMiddleName = data.ownerMiddleName.trim();
+    if (data.ownerLastName !== undefined) updateData.ownerLastName = data.ownerLastName.trim();
     if (data.ownerAddress !== undefined) updateData.ownerAddress = data.ownerAddress.trim();
     if (data.ownerContactNumber !== undefined) updateData.ownerContactNumber = data.ownerContactNumber.trim();
     if (data.ownerEmail !== undefined) updateData.ownerEmail = data.ownerEmail.trim();
-    if (data.ownerPreferContactMethod !== undefined) updateData.ownerPreferContactMethod = data.ownerPreferContactMethod.trim();
+    if (data.ownerPreferContactMethod !== undefined) updateData.ownerPreferContactMethod = data.ownerPreferContactMethod;
     if (data.ownerIdUrl !== undefined) updateData.ownerIdUrl = data.ownerIdUrl.trim();
 
-    // Equipment Information
+    // Chainsaw Information
     if (data.brand !== undefined) updateData.brand = data.brand.trim();
     if (data.model !== undefined) updateData.model = data.model.trim();
     if (data.serialNumber !== undefined) updateData.serialNumber = data.serialNumber.trim();
@@ -325,6 +379,24 @@ export const updateEquipment = async (id: string, data: {
     if (data.otherInfo !== undefined) updateData.otherInfo = data.otherInfo.trim();
     if (data.intendedUse !== undefined) updateData.intendedUse = data.intendedUse;
     if (data.isNew !== undefined) updateData.isNew = data.isNew;
+
+    // Document Requirements
+    if (data.registrationApplicationUrl !== undefined) updateData.registrationApplicationUrl = data.registrationApplicationUrl.trim();
+    if (data.officialReceiptUrl !== undefined) updateData.officialReceiptUrl = data.officialReceiptUrl.trim();
+    if (data.spaUrl !== undefined) updateData.spaUrl = data.spaUrl.trim();
+    if (data.stencilSerialNumberPictureUrl !== undefined) updateData.stencilSerialNumberPictureUrl = data.stencilSerialNumberPictureUrl.trim();
+    if (data.chainsawPictureUrl !== undefined) updateData.chainsawPictureUrl = data.chainsawPictureUrl.trim();
+
+    // Additional Requirements
+    if (data.forestTenureAgreementUrl !== undefined) updateData.forestTenureAgreementUrl = data.forestTenureAgreementUrl.trim();
+    if (data.businessPermitUrl !== undefined) updateData.businessPermitUrl = data.businessPermitUrl.trim();
+    if (data.certificateOfRegistrationUrl !== undefined) updateData.certificateOfRegistrationUrl = data.certificateOfRegistrationUrl.trim();
+    if (data.lguBusinessPermitUrl !== undefined) updateData.lguBusinessPermitUrl = data.lguBusinessPermitUrl.trim();
+    if (data.woodProcessingPermitUrl !== undefined) updateData.woodProcessingPermitUrl = data.woodProcessingPermitUrl.trim();
+    if (data.governmentCertificationUrl !== undefined) updateData.governmentCertificationUrl = data.governmentCertificationUrl.trim();
+
+    // Data Privacy Consent
+    if (data.dataPrivacyConsent !== undefined) updateData.dataPrivacyConsent = data.dataPrivacyConsent;
 
     // Update the equipment
     const updatedEquipment = await db.equipment.update({

@@ -91,6 +91,40 @@ export function ExpandableOwnerInfo({ equipment }: ExpandableOwnerInfoProps) {
               </a>
             </div>
           )}
+
+          {/* Document Requirements */}
+          {(equipment.registrationApplicationUrl || equipment.officialReceiptUrl || equipment.spaUrl || equipment.stencilSerialNumberPictureUrl || equipment.chainsawPictureUrl) && (
+            <div className="space-y-2">
+              <label className="text-xs text-muted-foreground font-medium">Document Requirements</label>
+              <div className="space-y-1">
+                {equipment.registrationApplicationUrl && (
+                  <a href={equipment.registrationApplicationUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline block">
+                    • Registration Application
+                  </a>
+                )}
+                {equipment.officialReceiptUrl && (
+                  <a href={equipment.officialReceiptUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline block">
+                    • Official Receipt
+                  </a>
+                )}
+                {equipment.spaUrl && (
+                  <a href={equipment.spaUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline block">
+                    • SPA Document
+                  </a>
+                )}
+                {equipment.stencilSerialNumberPictureUrl && (
+                  <a href={equipment.stencilSerialNumberPictureUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline block">
+                    • Stencil Serial Number Picture
+                  </a>
+                )}
+                {equipment.chainsawPictureUrl && (
+                  <a href={equipment.chainsawPictureUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline block">
+                    • Chainsaw Picture
+                  </a>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Registration Details */}

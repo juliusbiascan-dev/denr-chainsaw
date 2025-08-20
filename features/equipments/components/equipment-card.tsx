@@ -16,6 +16,7 @@ import { QRCodeDisplay } from '@/components/qr-code-display';
 import { AlertModal } from '@/components/modal/alert-modal';
 import { deleteEquipmentAction } from '@/actions/equipment';
 import { Separator } from '@/components/ui/separator';
+import { formatUseType, formatFuelType, formatDate } from '@/lib/format';
 
 interface EquipmentCardProps {
   equipment: Equipment;
@@ -146,6 +147,40 @@ export function EquipmentCard({ equipment, isSelected, onSelectionChange }: Equi
                       </a>
                     </div>
                   )}
+
+                  {/* Document Requirements */}
+                  {(equipment.registrationApplicationUrl || equipment.officialReceiptUrl || equipment.spaUrl || equipment.stencilSerialNumberPictureUrl || equipment.chainsawPictureUrl) && (
+                    <div>
+                      <label className="text-sm text-muted-foreground dark:text-gray-400">Document Requirements</label>
+                      <div className="mt-1 space-y-1">
+                        {equipment.registrationApplicationUrl && (
+                          <a href={equipment.registrationApplicationUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline block">
+                            • Registration Application
+                          </a>
+                        )}
+                        {equipment.officialReceiptUrl && (
+                          <a href={equipment.officialReceiptUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline block">
+                            • Official Receipt
+                          </a>
+                        )}
+                        {equipment.spaUrl && (
+                          <a href={equipment.spaUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline block">
+                            • SPA Document
+                          </a>
+                        )}
+                        {equipment.stencilSerialNumberPictureUrl && (
+                          <a href={equipment.stencilSerialNumberPictureUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline block">
+                            • Stencil Serial Number Picture
+                          </a>
+                        )}
+                        {equipment.chainsawPictureUrl && (
+                          <a href={equipment.chainsawPictureUrl} target="_blank" rel="noopener noreferrer" className="text-xs text-primary hover:underline block">
+                            • Chainsaw Picture
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 <Separator />
@@ -158,7 +193,7 @@ export function EquipmentCard({ equipment, isSelected, onSelectionChange }: Equi
                     <label className="text-sm text-muted-foreground dark:text-gray-400">Intended Use</label>
                     <Badge variant='outline' className='capitalize ml-2 dark:border-gray-600 dark:text-gray-300'>
                       {equipment.isNew ? <CheckCircle2 className="w-4 h-4 mr-1" /> : <XCircle className="w-4 h-4 mr-1" />}
-                      {equipment.intendedUse.replace('_', ' ').toLowerCase()}
+                      {formatUseType(equipment.intendedUse)}
                     </Badge>
                   </div>
 
@@ -170,11 +205,7 @@ export function EquipmentCard({ equipment, isSelected, onSelectionChange }: Equi
                   <div>
                     <label className="text-sm text-muted-foreground dark:text-gray-400">Date Acquired</label>
                     <p className="mt-1 dark:text-gray-300">
-                      {new Date(equipment.dateAcquired).toLocaleDateString('en-US', {
-                        month: 'long',
-                        day: 'numeric',
-                        year: 'numeric'
-                      })}
+                      {formatDate(equipment.dateAcquired)}
                     </p>
                   </div>
 
@@ -183,7 +214,7 @@ export function EquipmentCard({ equipment, isSelected, onSelectionChange }: Equi
                     <p className="mt-1 dark:text-gray-300">
                       Guid Bar Length: {equipment.guidBarLength}mm<br />
                       Horse Power: {equipment.horsePower}hp<br />
-                      Fuel Type: {equipment.fuelType}
+                      Fuel Type: {formatFuelType(equipment.fuelType)}
                     </p>
                   </div>
 
@@ -195,11 +226,7 @@ export function EquipmentCard({ equipment, isSelected, onSelectionChange }: Equi
                   <div>
                     <label className="text-sm text-muted-foreground dark:text-gray-400">Last Updated</label>
                     <p className="mt-1 dark:text-gray-300">
-                      {new Date(equipment.updatedAt).toLocaleDateString('en-US', {
-                        month: 'long',
-                        day: 'numeric',
-                        year: 'numeric'
-                      })}
+                      {formatDate(equipment.updatedAt)}
                     </p>
                   </div>
                 </div>

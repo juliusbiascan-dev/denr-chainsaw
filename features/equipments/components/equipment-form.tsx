@@ -45,6 +45,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { FileUploader } from '@/components/file-uploader';
 import { UploadButton, UploadDropzone } from '@/lib/uploadthing';
 import { toast } from 'sonner';
+import { Checkbox } from '@/components/ui/checkbox';
 
 export default function EquipmentForm({
   initialData,
@@ -57,33 +58,64 @@ export default function EquipmentForm({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string>('');
   const [success, setSuccess] = useState<string>('');
+
+  // Document URLs state
   const [ownerIdUrl, setOwnerIdUrl] = useState<string>(initialData?.ownerIdUrl || '');
+  const [registrationApplicationUrl, setRegistrationApplicationUrl] = useState<string>(initialData?.registrationApplicationUrl || '');
+  const [officialReceiptUrl, setOfficialReceiptUrl] = useState<string>(initialData?.officialReceiptUrl || '');
+  const [spaUrl, setSpaUrl] = useState<string>(initialData?.spaUrl || '');
+  const [stencilSerialNumberPictureUrl, setStencilSerialNumberPictureUrl] = useState<string>(initialData?.stencilSerialNumberPictureUrl || '');
+  const [chainsawPictureUrl, setChainsawPictureUrl] = useState<string>(initialData?.chainsawPictureUrl || '');
+  const [forestTenureAgreementUrl, setForestTenureAgreementUrl] = useState<string>(initialData?.forestTenureAgreementUrl || '');
+  const [businessPermitUrl, setBusinessPermitUrl] = useState<string>(initialData?.businessPermitUrl || '');
+  const [certificateOfRegistrationUrl, setCertificateOfRegistrationUrl] = useState<string>(initialData?.certificateOfRegistrationUrl || '');
+  const [lguBusinessPermitUrl, setLguBusinessPermitUrl] = useState<string>(initialData?.lguBusinessPermitUrl || '');
+  const [woodProcessingPermitUrl, setWoodProcessingPermitUrl] = useState<string>(initialData?.woodProcessingPermitUrl || '');
+  const [governmentCertificationUrl, setGovernmentCertificationUrl] = useState<string>(initialData?.governmentCertificationUrl || '');
 
   const isEditing = !!initialData;
 
   const defaultValues = {
     // Owner Information
     ownerFirstName: initialData?.ownerFirstName || '',
-    ownerLastName: initialData?.ownerLastName || '',
     ownerMiddleName: initialData?.ownerMiddleName || '',
+    ownerLastName: initialData?.ownerLastName || '',
     ownerAddress: initialData?.ownerAddress || '',
     ownerContactNumber: initialData?.ownerContactNumber || '',
     ownerEmail: initialData?.ownerEmail || '',
-    ownerPreferContactMethod: initialData?.ownerPreferContactMethod || '',
+    ownerPreferContactMethod: (initialData?.ownerPreferContactMethod as 'EMAIL' | 'PHONE') || 'EMAIL',
     ownerIdUrl: initialData?.ownerIdUrl || '',
 
-    // Equipment Information
+    // Chainsaw Information
     brand: initialData?.brand || '',
     model: initialData?.model || '',
     serialNumber: initialData?.serialNumber || '',
-    guidBarLength: initialData?.guidBarLength || 0,
-    horsePower: initialData?.horsePower || 0,
+    guidBarLength: initialData?.guidBarLength || undefined,
+    horsePower: initialData?.horsePower || undefined,
     fuelType: initialData?.fuelType || 'GAS',
-    dateAcquired: initialData?.dateAcquired || new Date(),
+    dateAcquired: initialData?.dateAcquired ? new Date(initialData.dateAcquired) : new Date(),
     stencilOfSerialNo: initialData?.stencilOfSerialNo || '',
     otherInfo: initialData?.otherInfo || '',
     intendedUse: initialData?.intendedUse || 'WOOD_PROCESSING',
-    isNew: initialData?.isNew ?? true
+    isNew: initialData?.isNew ?? true,
+
+    // Document Requirements
+    registrationApplicationUrl: initialData?.registrationApplicationUrl || '',
+    officialReceiptUrl: initialData?.officialReceiptUrl || '',
+    spaUrl: initialData?.spaUrl || '',
+    stencilSerialNumberPictureUrl: initialData?.stencilSerialNumberPictureUrl || '',
+    chainsawPictureUrl: initialData?.chainsawPictureUrl || '',
+
+    // Additional Requirements
+    forestTenureAgreementUrl: initialData?.forestTenureAgreementUrl || '',
+    businessPermitUrl: initialData?.businessPermitUrl || '',
+    certificateOfRegistrationUrl: initialData?.certificateOfRegistrationUrl || '',
+    lguBusinessPermitUrl: initialData?.lguBusinessPermitUrl || '',
+    woodProcessingPermitUrl: initialData?.woodProcessingPermitUrl || '',
+    governmentCertificationUrl: initialData?.governmentCertificationUrl || '',
+
+    // Data Privacy Consent
+    dataPrivacyConsent: initialData?.dataPrivacyConsent || false
   };
 
   const form = useForm<z.infer<typeof EquipmentSchema>>({
@@ -91,16 +123,25 @@ export default function EquipmentForm({
     defaultValues
   });
 
-
-
   function onSubmit(values: z.infer<typeof EquipmentSchema>) {
     setError('');
     setSuccess('');
 
-    // Include the uploaded file URL in the form data
+    // Include the uploaded file URLs in the form data
     const formData = {
       ...values,
-      ownerIdUrl: ownerIdUrl
+      ownerIdUrl,
+      registrationApplicationUrl,
+      officialReceiptUrl,
+      spaUrl,
+      stencilSerialNumberPictureUrl,
+      chainsawPictureUrl,
+      forestTenureAgreementUrl,
+      businessPermitUrl,
+      certificateOfRegistrationUrl,
+      lguBusinessPermitUrl,
+      woodProcessingPermitUrl,
+      governmentCertificationUrl
     };
 
     startTransition(async () => {
@@ -144,28 +185,15 @@ export default function EquipmentForm({
             {/* Owner Information Section */}
             <div className='space-y-6'>
               <h3 className='text-lg font-semibold text-foreground'>Owner Information</h3>
-              <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
+              <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
                 <FormField
                   control={form.control}
                   name='ownerFirstName'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>First Name</FormLabel>
+                      <FormLabel>First Name *</FormLabel>
                       <FormControl>
                         <Input placeholder='Enter first name' {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name='ownerLastName'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Last Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder='Enter last name' {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -176,9 +204,9 @@ export default function EquipmentForm({
                   name='ownerMiddleName'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Middle Name</FormLabel>
+                      <FormLabel>Middle Initial *</FormLabel>
                       <FormControl>
-                        <Input placeholder='Enter middle name' {...field} />
+                        <Input placeholder='Enter middle initial' {...field} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -186,10 +214,25 @@ export default function EquipmentForm({
                 />
                 <FormField
                   control={form.control}
+                  name='ownerLastName'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Last Name *</FormLabel>
+                      <FormControl>
+                        <Input placeholder='Enter last name' {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
+                <FormField
+                  control={form.control}
                   name='ownerContactNumber'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Contact Number</FormLabel>
+                      <FormLabel>Contact Number *</FormLabel>
                       <FormControl>
                         <Input placeholder='Enter contact number' {...field} />
                       </FormControl>
@@ -202,7 +245,7 @@ export default function EquipmentForm({
                   name='ownerEmail'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Email Address</FormLabel>
+                      <FormLabel>Email Address *</FormLabel>
                       <FormControl>
                         <Input type='email' placeholder='Enter email address' {...field} />
                       </FormControl>
@@ -215,7 +258,7 @@ export default function EquipmentForm({
                   name='ownerPreferContactMethod'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Preferred Contact Method</FormLabel>
+                      <FormLabel>Preferred Contact Method *</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -237,7 +280,7 @@ export default function EquipmentForm({
                 name='ownerAddress'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Address</FormLabel>
+                    <FormLabel>Address *</FormLabel>
                     <FormControl>
                       <Textarea
                         placeholder='Enter complete address'
@@ -258,27 +301,20 @@ export default function EquipmentForm({
                     <FormLabel>Owner ID Image</FormLabel>
                     <FormControl>
                       <div className="space-y-4">
-                        {/* Upload Dropzone */}
-                        <div>
-                          <p className="text-sm font-medium mb-2">Or drag and drop:</p>
-                          <UploadDropzone
-                            endpoint="imageUploader"
-                            onClientUploadComplete={(res: any) => {
-                              if (res && res[0]) {
-                                setOwnerIdUrl(res[0].url);
-                                toast.success("ID image uploaded successfully!");
-                              }
-                            }}
-                            onUploadError={(error: Error) => {
-                              console.error("Upload error:", error);
-                              toast.error(`Error uploading image: ${error.message}`);
-                            }}
-                            onUploadBegin={(fileName: string) => {
-                              console.log("Upload beginning:", fileName);
-                            }}
-                            className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
-                          />
-                        </div>
+                        <UploadDropzone
+                          endpoint="imageUploader"
+                          onClientUploadComplete={(res: any) => {
+                            if (res && res[0]) {
+                              setOwnerIdUrl(res[0].url);
+                              toast.success("ID image uploaded successfully!");
+                            }
+                          }}
+                          onUploadError={(error: Error) => {
+                            console.error("Upload error:", error);
+                            toast.error(`Error uploading image: ${error.message}`);
+                          }}
+                          className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
+                        />
                       </div>
                     </FormControl>
                     {ownerIdUrl && (
@@ -300,16 +336,16 @@ export default function EquipmentForm({
               />
             </div>
 
-            {/* Equipment Information Section */}
+            {/* Chainsaw Information Section */}
             <div className='space-y-6'>
-              <h3 className='text-lg font-semibold text-foreground'>Equipment Information</h3>
+              <h3 className='text-lg font-semibold text-foreground'>Chainsaw Information</h3>
               <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
                 <FormField
                   control={form.control}
                   name='brand'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Brand</FormLabel>
+                      <FormLabel>Chainsaw Brand *</FormLabel>
                       <FormControl>
                         <Input placeholder='Enter chainsaw brand' {...field} />
                       </FormControl>
@@ -322,7 +358,7 @@ export default function EquipmentForm({
                   name='model'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Model</FormLabel>
+                      <FormLabel>Chainsaw Model *</FormLabel>
                       <FormControl>
                         <Input placeholder='Enter chainsaw model' {...field} />
                       </FormControl>
@@ -336,7 +372,7 @@ export default function EquipmentForm({
                   name='serialNumber'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Serial Number</FormLabel>
+                      <FormLabel>Chainsaw Serial Number *</FormLabel>
                       <FormControl>
                         <Input placeholder='Enter serial number' {...field} />
                       </FormControl>
@@ -356,7 +392,7 @@ export default function EquipmentForm({
                           type="number"
                           placeholder='Enter guide bar length'
                           {...field}
-                          onChange={e => field.onChange(parseFloat(e.target.value))}
+                          onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
                         />
                       </FormControl>
                       <FormMessage />
@@ -375,7 +411,7 @@ export default function EquipmentForm({
                           type="number"
                           placeholder='Enter horse power'
                           {...field}
-                          onChange={e => field.onChange(parseFloat(e.target.value))}
+                          onChange={e => field.onChange(e.target.value ? parseFloat(e.target.value) : undefined)}
                         />
                       </FormControl>
                       <FormMessage />
@@ -388,7 +424,7 @@ export default function EquipmentForm({
                   name='fuelType'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Fuel Type</FormLabel>
+                      <FormLabel>Fuel Type *</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -412,7 +448,7 @@ export default function EquipmentForm({
                   name='dateAcquired'
                   render={({ field }) => (
                     <FormItem className="flex flex-col">
-                      <FormLabel>Date Acquired</FormLabel>
+                      <FormLabel>Date of Acquisition *</FormLabel>
                       <Popover>
                         <PopoverTrigger asChild>
                           <FormControl>
@@ -451,7 +487,7 @@ export default function EquipmentForm({
                   name='stencilOfSerialNo'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Stencil of Serial Number</FormLabel>
+                      <FormLabel>Stencil of Serial Number *</FormLabel>
                       <FormControl>
                         <Input placeholder='Enter stencil of serial number' {...field} />
                       </FormControl>
@@ -465,7 +501,7 @@ export default function EquipmentForm({
                   name='intendedUse'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Intended Use</FormLabel>
+                      <FormLabel>Intended Use of the Chainsaw *</FormLabel>
                       <Select onValueChange={field.onChange} defaultValue={field.value}>
                         <FormControl>
                           <SelectTrigger>
@@ -474,9 +510,9 @@ export default function EquipmentForm({
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="WOOD_PROCESSING">Wood Processing</SelectItem>
-                          <SelectItem value="TREE_CUTTING">Tree Cutting</SelectItem>
-                          <SelectItem value="LEGAL_PURPOSES">Legal Purposes</SelectItem>
-                          <SelectItem value="OFFICIAL_TREE_CUTTING">Official Tree Cutting</SelectItem>
+                          <SelectItem value="TREE_CUTTING_PRIVATE_PLANTATION">Tree Cutting inside a Private Tree Plantation</SelectItem>
+                          <SelectItem value="GOVT_LEGAL_PURPOSES">Gov't./ GOCC - for legal purposes</SelectItem>
+                          <SelectItem value="OFFICIAL_TREE_CUTTING_BARANGAY">Official Tree Cutting within the Barangay</SelectItem>
                           <SelectItem value="OTHER">Other</SelectItem>
                         </SelectContent>
                       </Select>
@@ -491,10 +527,10 @@ export default function EquipmentForm({
                 name='otherInfo'
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Other Information</FormLabel>
+                    <FormLabel>Other Info of the Chainsaw (Description, Color, etc.) *</FormLabel>
                     <FormControl>
                       <Textarea
-                        placeholder='Enter other information (Description, Color , etc.)'
+                        placeholder='Enter other information (Description, Color, etc.)'
                         className='resize-none'
                         {...field}
                       />
@@ -510,9 +546,9 @@ export default function EquipmentForm({
                 render={({ field }) => (
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-3 shadow-sm">
                     <div className="space-y-0.5">
-                      <FormLabel>Registration Type</FormLabel>
+                      <FormLabel>Registration Type *</FormLabel>
                       <FormDescription>
-                        Is this a new chainsaw registration?
+                        New Chainsaw or renewal of registration?
                       </FormDescription>
                     </div>
                     <FormControl>
@@ -521,9 +557,400 @@ export default function EquipmentForm({
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
+                    <div className="ml-2 text-sm">
+                      {field.value ? 'New Chainsaw' : 'Renewal of Registration'}
+                    </div>
                   </FormItem>
                 )}
               />
+            </div>
+
+            {/* Document Requirements Section */}
+            <div className='space-y-6'>
+              <h3 className='text-lg font-semibold text-foreground'>Document Requirements (New Chainsaw)</h3>
+              <p className='text-sm text-muted-foreground'>
+                You may download a copy of chainsaw application form in{' '}
+                <a href="https://bit.ly/DENR1CRF" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                  https://bit.ly/DENR1CRF
+                </a>
+              </p>
+
+              {/* Registration Application */}
+              <FormField
+                control={form.control}
+                name='registrationApplicationUrl'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Signed Chainsaw Registration Application *</FormLabel>
+                    <FormControl>
+                      <UploadDropzone
+                        endpoint="imageUploader"
+                        onClientUploadComplete={(res: any) => {
+                          if (res && res[0]) {
+                            setRegistrationApplicationUrl(res[0].url);
+                            toast.success("Registration application uploaded successfully!");
+                          }
+                        }}
+                        onUploadError={(error: Error) => {
+                          toast.error(`Error uploading file: ${error.message}`);
+                        }}
+                        className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Upload 1 supported file: PDF or image. Max 100 MB.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Official Receipt */}
+              <FormField
+                control={form.control}
+                name='officialReceiptUrl'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Official Receipt of the Chainsaw *</FormLabel>
+                    <FormControl>
+                      <UploadDropzone
+                        endpoint="imageUploader"
+                        onClientUploadComplete={(res: any) => {
+                          if (res && res[0]) {
+                            setOfficialReceiptUrl(res[0].url);
+                            toast.success("Official receipt uploaded successfully!");
+                          }
+                        }}
+                        onUploadError={(error: Error) => {
+                          toast.error(`Error uploading file: ${error.message}`);
+                        }}
+                        className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Upload 1 supported file: PDF or image. Max 100 MB.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* SPA */}
+              <FormField
+                control={form.control}
+                name='spaUrl'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>SPA (if the applicant is not the owner of the chainsaw)</FormLabel>
+                    <FormControl>
+                      <UploadDropzone
+                        endpoint="imageUploader"
+                        onClientUploadComplete={(res: any) => {
+                          if (res && res[0]) {
+                            setSpaUrl(res[0].url);
+                            toast.success("SPA uploaded successfully!");
+                          }
+                        }}
+                        onUploadError={(error: Error) => {
+                          toast.error(`Error uploading file: ${error.message}`);
+                        }}
+                        className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Upload 1 supported file: PDF or image. Max 100 MB.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Stencil Serial Number Picture */}
+              <FormField
+                control={form.control}
+                name='stencilSerialNumberPictureUrl'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Stencil Serial Number of Chainsaw (Picture) *</FormLabel>
+                    <FormControl>
+                      <UploadDropzone
+                        endpoint="imageUploader"
+                        onClientUploadComplete={(res: any) => {
+                          if (res && res[0]) {
+                            setStencilSerialNumberPictureUrl(res[0].url);
+                            toast.success("Stencil serial number picture uploaded successfully!");
+                          }
+                        }}
+                        onUploadError={(error: Error) => {
+                          toast.error(`Error uploading image: ${error.message}`);
+                        }}
+                        className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Upload 1 supported file: PDF or image. Max 100 MB.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Chainsaw Picture */}
+              <FormField
+                control={form.control}
+                name='chainsawPictureUrl'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Picture of the Chainsaw *</FormLabel>
+                    <FormControl>
+                      <UploadDropzone
+                        endpoint="imageUploader"
+                        onClientUploadComplete={(res: any) => {
+                          if (res && res[0]) {
+                            setChainsawPictureUrl(res[0].url);
+                            toast.success("Chainsaw picture uploaded successfully!");
+                          }
+                        }}
+                        onUploadError={(error: Error) => {
+                          toast.error(`Error uploading image: ${error.message}`);
+                        }}
+                        className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Upload 1 supported file: PDF or image. Max 100 MB.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Additional Requirements Section */}
+            <div className='space-y-6'>
+              <h3 className='text-lg font-semibold text-foreground'>Additional Requirements</h3>
+              <p className='text-sm text-muted-foreground'>
+                You may download a copy of chainsaw application form in{' '}
+                <a href="https://bit.ly/DENR1CRF" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                  https://bit.ly/DENR1CRF
+                </a>
+              </p>
+
+              {/* Forest Tenure Agreement */}
+              <FormField
+                control={form.control}
+                name='forestTenureAgreementUrl'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Forest Tenure Agreement (if Tenural Instrument Holder)</FormLabel>
+                    <FormControl>
+                      <UploadDropzone
+                        endpoint="imageUploader"
+                        onClientUploadComplete={(res: any) => {
+                          if (res && res[0]) {
+                            setForestTenureAgreementUrl(res[0].url);
+                            toast.success("Forest tenure agreement uploaded successfully!");
+                          }
+                        }}
+                        onUploadError={(error: Error) => {
+                          toast.error(`Error uploading file: ${error.message}`);
+                        }}
+                        className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Upload 1 supported file: PDF or image. Max 100 MB.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Business Permit */}
+              <FormField
+                control={form.control}
+                name='businessPermitUrl'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Business Permit (If Business owner)</FormLabel>
+                    <FormControl>
+                      <UploadDropzone
+                        endpoint="imageUploader"
+                        onClientUploadComplete={(res: any) => {
+                          if (res && res[0]) {
+                            setBusinessPermitUrl(res[0].url);
+                            toast.success("Business permit uploaded successfully!");
+                          }
+                        }}
+                        onUploadError={(error: Error) => {
+                          toast.error(`Error uploading file: ${error.message}`);
+                        }}
+                        className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Upload 1 supported file: PDF or image. Max 100 MB.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Certificate of Registration */}
+              <FormField
+                control={form.control}
+                name='certificateOfRegistrationUrl'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>For Private Tree Plantation Owner - Certificate of Registration</FormLabel>
+                    <FormControl>
+                      <UploadDropzone
+                        endpoint="imageUploader"
+                        onClientUploadComplete={(res: any) => {
+                          if (res && res[0]) {
+                            setCertificateOfRegistrationUrl(res[0].url);
+                            toast.success("Certificate of registration uploaded successfully!");
+                          }
+                        }}
+                        onUploadError={(error: Error) => {
+                          toast.error(`Error uploading file: ${error.message}`);
+                        }}
+                        className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Upload 1 supported file: PDF or image. Max 100 MB.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* LGU Business Permit */}
+              <FormField
+                control={form.control}
+                name='lguBusinessPermitUrl'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Business Permit from LGU or affidavit that the chainsaw is needed if applicants/profession/work and will be used for legal purpose</FormLabel>
+                    <FormControl>
+                      <UploadDropzone
+                        endpoint="imageUploader"
+                        onClientUploadComplete={(res: any) => {
+                          if (res && res[0]) {
+                            setLguBusinessPermitUrl(res[0].url);
+                            toast.success("LGU business permit uploaded successfully!");
+                          }
+                        }}
+                        onUploadError={(error: Error) => {
+                          toast.error(`Error uploading file: ${error.message}`);
+                        }}
+                        className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Upload 1 supported file: PDF or image. Max 100 MB.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Wood Processing Permit */}
+              <FormField
+                control={form.control}
+                name='woodProcessingPermitUrl'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>For Wood Processor - Wood processing plant permit</FormLabel>
+                    <FormControl>
+                      <UploadDropzone
+                        endpoint="imageUploader"
+                        onClientUploadComplete={(res: any) => {
+                          if (res && res[0]) {
+                            setWoodProcessingPermitUrl(res[0].url);
+                            toast.success("Wood processing permit uploaded successfully!");
+                          }
+                        }}
+                        onUploadError={(error: Error) => {
+                          toast.error(`Error uploading file: ${error.message}`);
+                        }}
+                        className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Upload 1 supported file: PDF or image. Max 100 MB.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              {/* Government Certification */}
+              <FormField
+                control={form.control}
+                name='governmentCertificationUrl'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>For government and GOCC - Certification from the Head of Office or his/her authorized representative that chainsaws are owned/possessed by the office and use for legal purposes (specify)</FormLabel>
+                    <FormControl>
+                      <UploadDropzone
+                        endpoint="imageUploader"
+                        onClientUploadComplete={(res: any) => {
+                          if (res && res[0]) {
+                            setGovernmentCertificationUrl(res[0].url);
+                            toast.success("Government certification uploaded successfully!");
+                          }
+                        }}
+                        onUploadError={(error: Error) => {
+                          toast.error(`Error uploading file: ${error.message}`);
+                        }}
+                        className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
+                      />
+                    </FormControl>
+                    <FormDescription>
+                      Upload 1 supported file: PDF or image. Max 100 MB.
+                    </FormDescription>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            {/* Data Privacy Consent Section */}
+            <div className='space-y-6'>
+              <h3 className='text-lg font-semibold text-foreground'>Data Privacy Act Consent</h3>
+              <div className='rounded-lg border p-4 bg-muted/50'>
+                <p className='text-sm text-muted-foreground mb-4'>
+                  Compliance to "Data Privacy Act of 2012".
+                </p>
+                <p className='text-sm mb-4'>
+                  In submitting this form I agree to my details being used for the purposes of
+                  Chainsaw Registration. The information will only be accessed by DENR Staff. I
+                  understand my data will be held securely and will not be distributed to third
+                  parties.
+                </p>
+                <FormField
+                  control={form.control}
+                  name='dataPrivacyConsent'
+                  render={({ field }) => (
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel className="text-sm font-normal">
+                          I agree to the Data Privacy Act consent
+                        </FormLabel>
+                        <FormMessage />
+                      </div>
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
 
             <FormError message={error} />

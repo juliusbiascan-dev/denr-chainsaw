@@ -86,27 +86,46 @@ model TwoFactorConfirmation {
 model Equipment {
   id                       String  @id @default(cuid())
   ownerFirstName           String //Owner's First Name
+  ownerMiddleName          String //Owner's Middle Initial
   ownerLastName            String //Owner's Last Name
-  ownerMiddleName          String //Owner's Middle Name
   ownerAddress             String //Owner's Address
-  ownerContactNumber       String? //Owner's Contact Number
-  ownerEmail               String? //Owner's Email
-  ownerPreferContactMethod String? //Owner's Preferred Contact Method
+  ownerContactNumber       String //Owner's Contact Number
+  ownerEmail               String //Owner's Email
+  ownerPreferContactMethod String //Owner's Preferred Contact Method
   ownerIdUrl               String? //Owner's ID URL
 
+  // Chainsaw Information
   brand             String // Chainsaw Brand
   model             String // Chainsaw Model
   serialNumber      String   @unique // Chainsaw Serial Number
-  guidBarLength     Float // Guide Bar Length in inches (in inches)
-  horsePower        Float // Horse Power (in horsepower)
+  guidBarLength     Float? // Guide Bar Length in inches (optional)
+  horsePower        Float? // Horse Power (optional)
   fuelType          FuelType // Fuel type (Gas, Diesel, Electric, Other)
   dateAcquired      DateTime // Date of Acquisition
-  stencilOfSerialNo String // Stencil of Serial Number (if available)
-  otherInfo         String // Document/proof of ownership
+  stencilOfSerialNo String // Stencil of Serial Number
+  otherInfo         String // Other Info of the Chainsaw
   intendedUse       UseType // Intended use of chainsaw
   isNew             Boolean // New Chainsaw or renewal of registration
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
+
+  // Document Requirements
+  registrationApplicationUrl    String? // Signed Chainsaw Registration Application
+  officialReceiptUrl            String? // Official Receipt of the Chainsaw
+  spaUrl                        String? // SPA (if the applicant is not the owner of the chainsaw)
+  stencilSerialNumberPictureUrl String? // Stencil Serial Number of Chainsaw (Picture)
+  chainsawPictureUrl            String? // Picture of the Chainsaw
+
+  // Additional Requirements
+  forestTenureAgreementUrl     String? // Forest Tenure Agreement (if Tenural Instrument Holder)
+  businessPermitUrl            String? // Business Permit (If Business owner)
+  certificateOfRegistrationUrl String? // For Private Tree Plantation Owner - Certificate of Registration
+  lguBusinessPermitUrl         String? // Business Permit from LGU or affidavit
+  woodProcessingPermitUrl      String? // For Wood Processor - Wood processing plant permit
+  governmentCertificationUrl   String? // For government and GOCC - Certification from the Head of Office
+
+  // Data Privacy Consent
+  dataPrivacyConsent Boolean @default(false)
 
   // Optional: documents/attachments
   documents Document[]
@@ -121,9 +140,9 @@ enum FuelType {
 
 enum UseType {
   WOOD_PROCESSING
-  TREE_CUTTING
-  LEGAL_PURPOSES
-  OFFICIAL_TREE_CUTTING
+  TREE_CUTTING_PRIVATE_PLANTATION
+  GOVT_LEGAL_PURPOSES
+  OFFICIAL_TREE_CUTTING_BARANGAY
   OTHER
 }
 

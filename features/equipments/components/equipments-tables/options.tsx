@@ -35,9 +35,9 @@ export const DEFAULT_FUEL_TYPES = [
 
 export const DEFAULT_USE_TYPES = [
   { value: 'WOOD_PROCESSING', label: 'Wood Processing' },
-  { value: 'TREE_CUTTING', label: 'Tree Cutting' },
-  { value: 'LEGAL_PURPOSES', label: 'Legal Purposes' },
-  { value: 'OFFICIAL_TREE_CUTTING', label: 'Official Tree Cutting' },
+  { value: 'TREE_CUTTING_PRIVATE_PLANTATION', label: 'Tree Cutting inside a Private Tree Plantation' },
+  { value: 'GOVT_LEGAL_PURPOSES', label: 'Gov\'t./ GOCC - for legal purposes' },
+  { value: 'OFFICIAL_TREE_CUTTING_BARANGAY', label: 'Official Tree Cutting within the Barangay' },
   { value: 'OTHER', label: 'Other' }
 ];
 

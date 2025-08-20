@@ -11,7 +11,7 @@ export default async function EquipmentViewPage({
   equipmentId
 }: TEquipmentViewPage) {
   let equipment = null;
-  let pageTitle = 'Create New Equipment';
+  let pageTitle = 'Register Equipment';
 
   if (equipmentId !== 'new') {
     const data = await getEquipmentById(equipmentId);

@@ -58,30 +58,55 @@ export function ExcelUtils({ equipments, selectedEquipments }: ExcelUtilsProps) 
             const row = jsonData[i] as any[];
             if (!row || row.length === 0) continue;
 
-            // Transform data according to schema requirements
+            // Transform data according to schema requirements - aligned with new structure
             const equipmentData = {
+              // Auto Number (extract number from CSRALAMINOS format if present)
+              autoNumber: (() => {
+                const autoNumberValue = row[headers.indexOf('Auto Number')] || '';
+                if (autoNumberValue && typeof autoNumberValue === 'string' && autoNumberValue.startsWith('CSRALAMINOS')) {
+                  // Extract the number part from CSRALAMINOS format
+                  const numberPart = autoNumberValue.replace('CSRALAMINOS', '');
+                  return parseInt(numberPart) || 0;
+                }
+                return 0;
+              })(),
+
               // Owner Information
-              ownerFirstName: row[headers.indexOf('Owner First Name')] || '',
-              ownerLastName: row[headers.indexOf('Owner Last Name')] || '',
-              ownerMiddleName: row[headers.indexOf('Owner Middle Name')] || '',
-              ownerAddress: row[headers.indexOf('Owner Address')] || '',
-              ownerContactNumber: row[headers.indexOf('Owner Contact Number')] || '',
-              ownerEmail: row[headers.indexOf('Owner Email')] || '',
-              ownerPreferContactMethod: row[headers.indexOf('Owner Preferred Contact Method')] || '',
+              ownerFirstName: row[headers.indexOf('First Name')] || row[headers.indexOf('Owner First Name')] || '',
+              ownerLastName: row[headers.indexOf('Last Name')] || row[headers.indexOf('Owner Last Name')] || '',
+              ownerMiddleName: row[headers.indexOf('Middle Initial')] || row[headers.indexOf('Owner Middle Name')] || '',
+              ownerAddress: row[headers.indexOf('Address')] || row[headers.indexOf('Owner Address')] || '',
+              ownerContactNumber: row[headers.indexOf('Contact No')] || row[headers.indexOf('Owner Contact Number')] || '',
+              ownerEmail: row[headers.indexOf('Email Address')] || row[headers.indexOf('Owner Email')] || '',
+              ownerPreferContactMethod: row[headers.indexOf('Preferred Contacting Channel')] || row[headers.indexOf('Owner Preferred Contact Method')] || '',
               ownerIdUrl: '', // Default empty string
 
               // Equipment Information
-              brand: row[headers.indexOf('Brand')] || '',
-              model: row[headers.indexOf('Model')] || '',
-              serialNumber: row[headers.indexOf('Serial Number')] || '',
-              guidBarLength: parseFloat(row[headers.indexOf('Guide Bar Length (inches)')]) || 0,
-              horsePower: parseFloat(row[headers.indexOf('Horse Power')]) || 0,
-              fuelType: row[headers.indexOf('Fuel Type')] || 'GAS',
-              dateAcquired: new Date(row[headers.indexOf('Date Acquired')] || new Date()),
-              stencilOfSerialNo: row[headers.indexOf('Stencil of Serial Number')] || '',
-              otherInfo: row[headers.indexOf('Other Information')] || '',
-              intendedUse: row[headers.indexOf('Intended Use')] || 'OTHER',
-              isNew: row[headers.indexOf('Is New Equipment')] === 'Yes'
+              brand: row[headers.indexOf('Chainsaw Brand')] || row[headers.indexOf('Brand')] || '',
+              model: row[headers.indexOf('Chainsaw Model')] || row[headers.indexOf('Model')] || '',
+              serialNumber: row[headers.indexOf('Chainsaw Serial No')] || row[headers.indexOf('Serial Number')] || '',
+              guidBarLength: parseFloat(row[headers.indexOf('Guide Bar Length')] || row[headers.indexOf('Guide Bar Length (inches)')] || '0') || 0,
+              horsePower: parseFloat(row[headers.indexOf('Inch/Horse Power')] || row[headers.indexOf('Horse Power')] || '0') || 0,
+              fuelType: row[headers.indexOf('Fuel')] || row[headers.indexOf('Fuel Type')] || 'GAS',
+              dateAcquired: new Date(row[headers.indexOf('Date of Acquisition')] || row[headers.indexOf('Date Acquired')] || new Date()),
+              stencilOfSerialNo: row[headers.indexOf('Stencil of Serial No')] || row[headers.indexOf('Stencil of Serial Number')] || '',
+              otherInfo: row[headers.indexOf('Other Info of the Chain')] || row[headers.indexOf('Other Information')] || '',
+              intendedUse: row[headers.indexOf('Intended Use of the Chain')] || row[headers.indexOf('Intended Use')] || 'OTHER',
+              isNew: (row[headers.indexOf('New Chainsaw or renewal')] || row[headers.indexOf('Is New Equipment')] || '').toLowerCase().includes('new'),
+
+              // Document Requirements
+              registrationApplicationUrl: row[headers.indexOf('Signed Chainsaw Registration')] || '',
+              officialReceiptUrl: row[headers.indexOf('Application Official Receipt')] || '',
+              spaUrl: row[headers.indexOf('SPA (if the applicant is not the owner)')] || '',
+              stencilSerialNumberPictureUrl: row[headers.indexOf('Stencil Serial Number Picture')] || '',
+              chainsawPictureUrl: row[headers.indexOf('Picture of the Chainsaw')] || '',
+              forestTenureAgreementUrl: row[headers.indexOf('Forest Tenure Agreement')] || '',
+              businessPermitUrl: row[headers.indexOf('Business Permit (If Business owner)')] || '',
+              certificateOfRegistrationUrl: row[headers.indexOf('Certificate of Registration')] || '',
+              lguBusinessPermitUrl: row[headers.indexOf('LGU Business Permit')] || '',
+              woodProcessingPermitUrl: row[headers.indexOf('Wood Processing Permit')] || '',
+              governmentCertificationUrl: row[headers.indexOf('Government Certification')] || '',
+              dataPrivacyConsent: (row[headers.indexOf('Data Privacy Consent')] || '').toLowerCase().includes('yes')
             };
 
             importedEquipments.push(equipmentData);
@@ -127,60 +152,80 @@ export function ExcelUtils({ equipments, selectedEquipments }: ExcelUtilsProps) 
 
   const exportToExcel = (items: Equipment[]) => {
     try {
-      // Prepare data for export
-      const exportData = items.map((equipment) => ({
-        'Equipment ID': equipment.id,
-        'Owner First Name': equipment.ownerFirstName,
-        'Owner Last Name': equipment.ownerLastName,
-        'Owner Middle Name': equipment.ownerMiddleName,
-        'Owner Address': equipment.ownerAddress,
-        'Owner Contact Number': equipment.ownerContactNumber || '',
-        'Owner Email': equipment.ownerEmail || '',
-        'Owner Preferred Contact Method': equipment.ownerPreferContactMethod || '',
-        'Brand': equipment.brand,
-        'Model': equipment.model,
-        'Serial Number': equipment.serialNumber,
-        'Guide Bar Length (inches)': equipment.guidBarLength,
-        'Horse Power': equipment.horsePower,
-        'Fuel Type': equipment.fuelType,
-        'Date Acquired': equipment.dateAcquired,
-        'Stencil of Serial Number': equipment.stencilOfSerialNo,
-        'Other Information': equipment.otherInfo,
-        'Intended Use': equipment.intendedUse,
-        'Is New Equipment': equipment.isNew ? 'Yes' : 'No',
-        'Status': equipment.status,
-        'Created At': equipment.createdAt,
-        'Updated At': equipment.updatedAt,
+      // Prepare data for export - aligned with schema and expected format
+      const exportData = items.map((equipment, index) => ({
+        'Auto Number': `CSRALAMINOS${String(index + 1).padStart(4, '0')}`,
+        'Timestamp': equipment.createdAt,
+        'First Name': equipment.ownerFirstName,
+        'Middle Initial': equipment.ownerMiddleName,
+        'Last Name': equipment.ownerLastName,
+        'Address': equipment.ownerAddress,
+        'Contact No': equipment.ownerContactNumber || '',
+        'Email Address': equipment.ownerEmail || '',
+        'Preferred Contacting Channel': equipment.ownerPreferContactMethod || '',
+        'Chainsaw Brand': equipment.brand,
+        'Chainsaw Model': equipment.model,
+        'Chainsaw Serial No': equipment.serialNumber,
+        'Guide Bar Length': equipment.guidBarLength || '',
+        'Inch/Horse Power': equipment.horsePower || '',
+        'Fuel': equipment.fuelType,
+        'Date of Acquisition': equipment.dateAcquired,
+        'Stencil of Serial No': equipment.stencilOfSerialNo,
+        'Other Info of the Chain': equipment.otherInfo,
+        'Intended Use of the Chain': equipment.intendedUse,
+        'New Chainsaw or renewal': equipment.isNew ? 'New' : 'Renewal',
+        'Signed Chainsaw Registration': equipment.registrationApplicationUrl || '',
+        'Application Official Receipt': equipment.officialReceiptUrl || '',
+        'SPA (if the applicant is not the owner)': equipment.spaUrl || '',
+        'Stencil Serial Number Picture': equipment.stencilSerialNumberPictureUrl || '',
+        'Picture of the Chainsaw': equipment.chainsawPictureUrl || '',
+        'Forest Tenure Agreement': equipment.forestTenureAgreementUrl || '',
+        'Business Permit (If Business owner)': equipment.businessPermitUrl || '',
+        'Certificate of Registration': equipment.certificateOfRegistrationUrl || '',
+        'LGU Business Permit': equipment.lguBusinessPermitUrl || '',
+        'Wood Processing Permit': equipment.woodProcessingPermitUrl || '',
+        'Government Certification': equipment.governmentCertificationUrl || '',
+        'Data Privacy Consent': equipment.dataPrivacyConsent ? 'Yes' : 'No',
       }));
 
       // Create workbook and worksheet
       const workbook = XLSX.utils.book_new();
       const worksheet = XLSX.utils.json_to_sheet(exportData);
 
-      // Set column widths for better readability
+      // Set column widths for better readability - aligned with new structure
       const columnWidths = [
-        { wch: 15 }, // Equipment ID
-        { wch: 20 }, // Owner First Name
-        { wch: 20 }, // Owner Last Name
-        { wch: 20 }, // Owner Middle Name
-        { wch: 40 }, // Owner Address
-        { wch: 20 }, // Owner Contact Number
-        { wch: 30 }, // Owner Email
-        { wch: 25 }, // Owner Preferred Contact Method
-        { wch: 15 }, // Brand
-        { wch: 20 }, // Model
-        { wch: 20 }, // Serial Number
-        { wch: 25 }, // Guide Bar Length
-        { wch: 15 }, // Horse Power
-        { wch: 15 }, // Fuel Type
-        { wch: 15 }, // Date Acquired
-        { wch: 25 }, // Stencil of Serial Number
-        { wch: 40 }, // Other Information
-        { wch: 25 }, // Intended Use
-        { wch: 20 }, // Is New Equipment
-        { wch: 15 }, // Status
-        { wch: 20 }, // Created At
-        { wch: 20 }, // Updated At
+        { wch: 12 }, // Auto Number
+        { wch: 20 }, // Timestamp
+        { wch: 15 }, // First Name
+        { wch: 15 }, // Middle Initial
+        { wch: 15 }, // Last Name
+        { wch: 40 }, // Address
+        { wch: 15 }, // Contact No
+        { wch: 30 }, // Email Address
+        { wch: 25 }, // Preferred Contacting Channel
+        { wch: 20 }, // Chainsaw Brand
+        { wch: 20 }, // Chainsaw Model
+        { wch: 20 }, // Chainsaw Serial No
+        { wch: 18 }, // Guide Bar Length
+        { wch: 18 }, // Inch/Horse Power
+        { wch: 12 }, // Fuel
+        { wch: 20 }, // Date of Acquisition
+        { wch: 25 }, // Stencil of Serial No
+        { wch: 35 }, // Other Info of the Chain
+        { wch: 25 }, // Intended Use of the Chain
+        { wch: 20 }, // New Chainsaw or renewal
+        { wch: 30 }, // Signed Chainsaw Registration
+        { wch: 30 }, // Application Official Receipt
+        { wch: 35 }, // SPA (if the applicant is not the owner)
+        { wch: 30 }, // Stencil Serial Number Picture
+        { wch: 25 }, // Picture of the Chainsaw
+        { wch: 25 }, // Forest Tenure Agreement
+        { wch: 30 }, // Business Permit (If Business owner)
+        { wch: 30 }, // Certificate of Registration
+        { wch: 25 }, // LGU Business Permit
+        { wch: 25 }, // Wood Processing Permit
+        { wch: 25 }, // Government Certification
+        { wch: 20 }, // Data Privacy Consent
       ];
       worksheet['!cols'] = columnWidths;
 
