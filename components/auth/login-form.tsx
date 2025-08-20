@@ -103,12 +103,13 @@ export const LoginForm = () => {
                   name="code"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Two Factor Code</FormLabel>
+                      <FormLabel className="text-lime-700 dark:text-lime-300 font-medium">Two Factor Code</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
                           disabled={isPending}
                           placeholder="123456"
+                          className="border-lime-200 dark:border-lime-700 focus:border-lime-400 dark:focus:border-lime-500"
                         />
                       </FormControl>
                       <FormMessage />
@@ -123,13 +124,14 @@ export const LoginForm = () => {
                     name="email"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Email</FormLabel>
+                        <FormLabel className="text-lime-700 dark:text-lime-300 font-medium">Email</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             disabled={isPending}
                             placeholder="Email"
                             type="email"
+                            className="border-lime-200 dark:border-lime-700 focus:border-lime-400 dark:focus:border-lime-500"
                           />
                         </FormControl>
                         <FormMessage />
@@ -141,19 +143,20 @@ export const LoginForm = () => {
                     name="password"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-gray-700 dark:text-gray-300 font-medium">Password</FormLabel>
+                        <FormLabel className="text-lime-700 dark:text-lime-300 font-medium">Password</FormLabel>
                         <FormControl>
                           <PasswordInput
                             {...field}
                             disabled={isPending}
                             placeholder="******"
+                            className="border-lime-200 dark:border-lime-700 focus:border-lime-400 dark:focus:border-lime-500"
                           />
                         </FormControl>
                         <Button
                           size="sm"
                           variant="link"
                           asChild
-                          className="px-0 font-normal text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
+                          className="px-0 font-normal text-lime-600 dark:text-lime-300 hover:text-lime-900 dark:hover:text-lime-100"
                         >
                           <Link href="/auth/reset">
                             Forgot password?
@@ -172,7 +175,7 @@ export const LoginForm = () => {
             <Button
               disabled={isPending}
               type="submit"
-              className="w-full bg-gradient-to-r from-[#08933D] to-[#0C1B72] hover:from-[#0C1B72] hover:to-[#08933D] text-white font-semibold py-3 px-4 rounded-lg transition-all duration-300 ease-out shadow-lg hover:shadow-xl h-12"
+              className="w-full bg-lime-600 dark:bg-lime-600 text-lime-50 dark:text-lime-50 hover:bg-lime-700 dark:hover:bg-lime-700 font-semibold py-3 px-4 rounded-lg transition-all duration-200 shadow-sm hover:shadow-md h-12"
             >
               {isPending && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
               {showTwoFactor ? "Confirm" : "Login"}

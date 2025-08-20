@@ -1,5 +1,6 @@
 import { Poppins } from "next/font/google";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 const font = Poppins({
   subsets: ["latin"],
@@ -16,21 +17,25 @@ export const Header = ({
   className,
 }: HeaderProps) => {
   return (
-    <div className={cn("w-full flex flex-col gap-y-4 items-center justify-center text-center", className)}>
-      <div className="flex items-center space-x-3">
-        <div className="w-12 h-12 bg-gradient-to-r from-[#08933D] to-[#0C1B72] rounded-lg flex items-center justify-center">
-          <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M3 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1z" clipRule="evenodd" />
-          </svg>
+    <div className={cn("w-full flex flex-col gap-y-6 items-center justify-center text-center", className)}>
+      <div className="flex items-center space-x-4">
+        <div className="flex items-center justify-center">
+          <Image
+            src="/logo.jpg"
+            alt="DENR Logo"
+            width={48}
+            height={48}
+            className="rounded-lg shadow-sm"
+          />
         </div>
         <h1 className={cn(
-          "text-2xl font-bold text-gray-900 dark:text-white",
+          "text-2xl font-bold text-lime-900 dark:text-lime-100",
           font.className,
         )}>
           Chainsaw Registry
         </h1>
       </div>
-      <p className="text-gray-600 dark:text-gray-300 text-sm max-w-sm">
+      <p className="text-lime-700 dark:text-lime-300 text-sm max-w-sm leading-relaxed">
         {label}
       </p>
     </div>

@@ -40,7 +40,7 @@ export const LoginButton = ({
   }
 
   return (
-    <span onClick={onClick} className="cursor-pointer hover:text-[#08933D] transition-colors">
+    <span onClick={onClick} className="cursor-pointer hover:text-lime-900 dark:hover:text-lime-100 transition-colors">
       {children}
     </span>
   );

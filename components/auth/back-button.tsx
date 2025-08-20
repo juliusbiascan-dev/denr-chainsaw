@@ -20,7 +20,7 @@ export const BackButton = ({
   return (
     <Button
       variant="ghost"
-      className={`group flex items-center gap-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-gray-800 transition-all duration-200 ${className}`}
+      className={`group flex items-center gap-2 text-lime-600 dark:text-lime-300 hover:text-lime-900 dark:hover:text-lime-100 hover:bg-lime-100 dark:hover:bg-lime-800 transition-all duration-200 ${className}`}
       size="sm"
       asChild
     >
