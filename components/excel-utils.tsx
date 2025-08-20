@@ -5,12 +5,15 @@ import { Button } from '@/components/ui/button';
 import { FileSpreadsheet, Upload, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import { bulkImportEquipmentAction } from '@/actions/equipment';
+import { getAll } from '@/data/equipment';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 interface ExcelUtilsProps {
   equipments: Equipment[];
@@ -18,6 +21,9 @@ interface ExcelUtilsProps {
 }
 
 export function ExcelUtils({ equipments, selectedEquipments }: ExcelUtilsProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const searchParams = useSearchParams();
+
   const importFromExcel = () => {
     try {
       // Create file input element
@@ -150,10 +156,84 @@ export function ExcelUtils({ equipments, selectedEquipments }: ExcelUtilsProps) 
     }
   };
 
-  const exportToExcel = (items: Equipment[]) => {
+  const exportToExcel = async (items: Equipment[]) => {
     try {
+      setIsLoading(true);
+
+      let itemsToExport = items;
+
+      // If no items are selected, fetch all equipment data with current filters
+      if (!selectedEquipments || selectedEquipments.length === 0) {
+        console.log('No items selected, fetching all equipment data with current filters...');
+
+        // Get current filters from URL
+        const currentFilters = {
+          search: searchParams.get('search') || undefined,
+          brand: searchParams.get('brand') || undefined,
+          model: searchParams.get('model') || undefined,
+          serialNumber: searchParams.get('serialNumber') || undefined,
+          categories: (() => {
+            const fuelType = searchParams.get('fuelType');
+            const intendedUse = searchParams.get('intendedUse');
+            const categories: string[] = [];
+            if (fuelType) categories.push(...fuelType.split(',').map(cat => cat.trim()));
+            if (intendedUse) categories.push(...intendedUse.split(',').map(cat => cat.trim()));
+            return categories.length > 0 ? categories : undefined;
+          })()
+        };
+
+        const allEquipments = await getAll(currentFilters);
+
+        // Transform the raw data to match Equipment type
+        itemsToExport = allEquipments.map((equipment: any) => {
+          const dateAcquired = new Date(equipment.dateAcquired);
+          const currentDate = new Date();
+          const twoYearsFromAcquisition = new Date(dateAcquired);
+          twoYearsFromAcquisition.setFullYear(dateAcquired.getFullYear() + 2);
+          const isExpired = currentDate > twoYearsFromAcquisition;
+
+          return {
+            id: equipment.id,
+            ownerFirstName: equipment.ownerFirstName,
+            ownerLastName: equipment.ownerLastName,
+            ownerMiddleName: equipment.ownerMiddleName,
+            ownerAddress: equipment.ownerAddress,
+            ownerContactNumber: equipment.ownerContactNumber,
+            ownerEmail: equipment.ownerEmail,
+            ownerPreferContactMethod: equipment.ownerPreferContactMethod,
+            ownerIdUrl: equipment.ownerIdUrl,
+            brand: equipment.brand,
+            model: equipment.model,
+            serialNumber: equipment.serialNumber,
+            guidBarLength: equipment.guidBarLength,
+            horsePower: equipment.horsePower,
+            fuelType: equipment.fuelType,
+            dateAcquired: dateAcquired.toISOString(),
+            stencilOfSerialNo: equipment.stencilOfSerialNo,
+            otherInfo: equipment.otherInfo,
+            intendedUse: equipment.intendedUse,
+            isNew: equipment.isNew,
+            createdAt: new Date(equipment.createdAt).toISOString(),
+            updatedAt: new Date(equipment.updatedAt).toISOString(),
+            status: isExpired ? 'inactive' : 'active',
+            registrationApplicationUrl: equipment.registrationApplicationUrl,
+            officialReceiptUrl: equipment.officialReceiptUrl,
+            spaUrl: equipment.spaUrl,
+            stencilSerialNumberPictureUrl: equipment.stencilSerialNumberPictureUrl,
+            chainsawPictureUrl: equipment.chainsawPictureUrl,
+            forestTenureAgreementUrl: equipment.forestTenureAgreementUrl,
+            businessPermitUrl: equipment.businessPermitUrl,
+            certificateOfRegistrationUrl: equipment.certificateOfRegistrationUrl,
+            lguBusinessPermitUrl: equipment.lguBusinessPermitUrl,
+            woodProcessingPermitUrl: equipment.woodProcessingPermitUrl,
+            governmentCertificationUrl: equipment.governmentCertificationUrl,
+            dataPrivacyConsent: equipment.dataPrivacyConsent
+          };
+        });
+      }
+
       // Prepare data for export - aligned with schema and expected format
-      const exportData = items.map((equipment, index) => ({
+      const exportData = itemsToExport.map((equipment, index) => ({
         'Auto Number': `CSRALAMINOS${String(index + 1).padStart(4, '0')}`,
         'Timestamp': equipment.createdAt,
         'First Name': equipment.ownerFirstName,
@@ -241,6 +321,8 @@ export function ExcelUtils({ equipments, selectedEquipments }: ExcelUtilsProps) 
     } catch (error) {
       console.error('Error exporting to Excel:', error);
       alert('Error exporting data to Excel');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -253,14 +335,16 @@ export function ExcelUtils({ equipments, selectedEquipments }: ExcelUtilsProps) 
       <div className="sm:hidden">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="outline" size="icon">
+            <Button variant="outline" size="icon" disabled={isLoading}>
               <FileSpreadsheet className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-[200px]">
-            <DropdownMenuItem onClick={() => exportToExcel(itemsToProcess)}>
+            <DropdownMenuItem onClick={() => exportToExcel(itemsToProcess)} disabled={isLoading}>
               <Download className="h-4 w-4 mr-2" />
-              <span>Export to Excel {hasSelection ? `(${selectedEquipments.length})` : `(${equipments.length})`}</span>
+              <span>
+                {isLoading ? 'Exporting...' : `Export to Excel ${hasSelection ? `(${selectedEquipments.length})` : '(All)'}`}
+              </span>
             </DropdownMenuItem>
             <DropdownMenuItem onClick={importFromExcel}>
               <Upload className="h-4 w-4 mr-2" />
@@ -276,9 +360,10 @@ export function ExcelUtils({ equipments, selectedEquipments }: ExcelUtilsProps) 
           variant="outline"
           size="sm"
           onClick={() => exportToExcel(itemsToProcess)}
+          disabled={isLoading}
         >
           <Download className="h-4 w-4 mr-2" />
-          Export to Excel {hasSelection ? `Selected (${selectedEquipments.length})` : `All (${equipments.length})`}
+          {isLoading ? 'Exporting...' : `Export to Excel ${hasSelection ? `Selected (${selectedEquipments.length})` : 'All'}`}
         </Button>
         <Button
           variant="outline"

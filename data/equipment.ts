@@ -4,22 +4,87 @@ import { db } from "@/lib/db";
 import { FuelType, UseType } from "@/lib/generated/prisma";
 
 export const getAll = async ({
-  search
+  search,
+  categories,
+  brand,
+  model,
+  serialNumber
 }: {
   search?: string;
+  categories?: string[];
+  brand?: string;
+  model?: string;
+  serialNumber?: string;
 }) => {
   try {
-    // First, get all equipments from the database
-    let equipments = await db.equipment.findMany();
+    // Build the where clause for filtering (same logic as getEquipments)
+    const whereClause: any = {};
 
-    // Search functionality across multiple fields
-    if (search) {
-      equipments = equipments.filter(equipment =>
-        equipment.brand.toLowerCase().includes(search.toLowerCase()) ||
-        equipment.model.toLowerCase().includes(search.toLowerCase()) ||
-        equipment.serialNumber.toLowerCase().includes(search.toLowerCase())
-      );
+    // Handle individual column filters (preferred over general search)
+    if (brand || model || serialNumber) {
+      whereClause.AND = [];
+
+      if (brand) {
+        whereClause.AND.push({
+          brand: { contains: brand, mode: 'insensitive' }
+        });
+      }
+
+      if (model) {
+        whereClause.AND.push({
+          model: { contains: model, mode: 'insensitive' }
+        });
+      }
+
+      if (serialNumber) {
+        whereClause.AND.push({
+          serialNumber: { contains: serialNumber, mode: 'insensitive' }
+        });
+      }
+    } else if (search) {
+      // Fallback to general search across multiple fields
+      whereClause.OR = [
+        { brand: { contains: search, mode: 'insensitive' } },
+        { model: { contains: search, mode: 'insensitive' } },
+        { serialNumber: { contains: search, mode: 'insensitive' } }
+      ];
     }
+
+    // Handle category filters
+    if (categories && categories.length > 0) {
+      const fuelTypeCategories = categories.filter(cat =>
+        ['GAS', 'DIESEL', 'ELECTRIC', 'OTHER'].includes(cat)
+      );
+      const useTypeCategories = categories.filter(cat =>
+        ['WOOD_PROCESSING', 'TREE_CUTTING_PRIVATE_PLANTATION', 'GOVT_LEGAL_PURPOSES', 'OFFICIAL_TREE_CUTTING_BARANGAY', 'OTHER'].includes(cat)
+      );
+
+      if (fuelTypeCategories.length > 0 || useTypeCategories.length > 0) {
+        if (!whereClause.AND) {
+          whereClause.AND = [];
+        }
+
+        if (fuelTypeCategories.length > 0) {
+          whereClause.AND.push({
+            fuelType: { in: fuelTypeCategories as FuelType[] }
+          });
+        }
+
+        if (useTypeCategories.length > 0) {
+          whereClause.AND.push({
+            intendedUse: { in: useTypeCategories as UseType[] }
+          });
+        }
+      }
+    }
+
+    // Get all equipments from the database with filters applied
+    const equipments = await db.equipment.findMany({
+      where: whereClause,
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
 
     return equipments;
   } catch (error) {

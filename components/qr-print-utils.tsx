@@ -4,12 +4,15 @@ import { Equipment } from '@/constants/data';
 import { Button } from '@/components/ui/button';
 import { Printer, MoreVertical } from 'lucide-react';
 import QRCode from 'qrcode';
+import { getAll } from '@/data/equipment';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 
 interface QRPrintUtilsProps {
   equipments: Equipment[];
@@ -17,6 +20,9 @@ interface QRPrintUtilsProps {
 }
 
 export function QRPrintUtils({ equipments, selectedEquipments }: QRPrintUtilsProps) {
+  const [isLoading, setIsLoading] = useState(false);
+  const searchParams = useSearchParams();
+
   // Generate QR code and overlay logo at the center
   const generateQRCodeDataURL = async (equipment: Equipment, size: number = 200): Promise<string> => {
     const url = `${process.env.NEXT_PUBLIC_BASE_URL || 'https://localhost:3001'}/equipments/${equipment.id}`;
@@ -64,8 +70,82 @@ export function QRPrintUtils({ equipments, selectedEquipments }: QRPrintUtilsPro
 
   const printQRCodes = async (items: Equipment[]) => {
     try {
+      setIsLoading(true);
+
+      let itemsToPrint = items;
+
+      // If no items are selected, fetch all equipment data with current filters
+      if (!selectedEquipments || selectedEquipments.length === 0) {
+        console.log('No items selected, fetching all equipment data with current filters...');
+
+        // Get current filters from URL
+        const currentFilters = {
+          search: searchParams.get('search') || undefined,
+          brand: searchParams.get('brand') || undefined,
+          model: searchParams.get('model') || undefined,
+          serialNumber: searchParams.get('serialNumber') || undefined,
+          categories: (() => {
+            const fuelType = searchParams.get('fuelType');
+            const intendedUse = searchParams.get('intendedUse');
+            const categories: string[] = [];
+            if (fuelType) categories.push(...fuelType.split(',').map(cat => cat.trim()));
+            if (intendedUse) categories.push(...intendedUse.split(',').map(cat => cat.trim()));
+            return categories.length > 0 ? categories : undefined;
+          })()
+        };
+
+        const allEquipments = await getAll(currentFilters);
+
+        // Transform the raw data to match Equipment type
+        itemsToPrint = allEquipments.map((equipment: any) => {
+          const dateAcquired = new Date(equipment.dateAcquired);
+          const currentDate = new Date();
+          const twoYearsFromAcquisition = new Date(dateAcquired);
+          twoYearsFromAcquisition.setFullYear(dateAcquired.getFullYear() + 2);
+          const isExpired = currentDate > twoYearsFromAcquisition;
+
+          return {
+            id: equipment.id,
+            ownerFirstName: equipment.ownerFirstName,
+            ownerLastName: equipment.ownerLastName,
+            ownerMiddleName: equipment.ownerMiddleName,
+            ownerAddress: equipment.ownerAddress,
+            ownerContactNumber: equipment.ownerContactNumber,
+            ownerEmail: equipment.ownerEmail,
+            ownerPreferContactMethod: equipment.ownerPreferContactMethod,
+            ownerIdUrl: equipment.ownerIdUrl,
+            brand: equipment.brand,
+            model: equipment.model,
+            serialNumber: equipment.serialNumber,
+            guidBarLength: equipment.guidBarLength,
+            horsePower: equipment.horsePower,
+            fuelType: equipment.fuelType,
+            dateAcquired: dateAcquired.toISOString(),
+            stencilOfSerialNo: equipment.stencilOfSerialNo,
+            otherInfo: equipment.otherInfo,
+            intendedUse: equipment.intendedUse,
+            isNew: equipment.isNew,
+            createdAt: new Date(equipment.createdAt).toISOString(),
+            updatedAt: new Date(equipment.updatedAt).toISOString(),
+            status: isExpired ? 'inactive' : 'active',
+            registrationApplicationUrl: equipment.registrationApplicationUrl,
+            officialReceiptUrl: equipment.officialReceiptUrl,
+            spaUrl: equipment.spaUrl,
+            stencilSerialNumberPictureUrl: equipment.stencilSerialNumberPictureUrl,
+            chainsawPictureUrl: equipment.chainsawPictureUrl,
+            forestTenureAgreementUrl: equipment.forestTenureAgreementUrl,
+            businessPermitUrl: equipment.businessPermitUrl,
+            certificateOfRegistrationUrl: equipment.certificateOfRegistrationUrl,
+            lguBusinessPermitUrl: equipment.lguBusinessPermitUrl,
+            woodProcessingPermitUrl: equipment.woodProcessingPermitUrl,
+            governmentCertificationUrl: equipment.governmentCertificationUrl,
+            dataPrivacyConsent: equipment.dataPrivacyConsent
+          };
+        });
+      }
+
       // Determine layout based on number of items
-      const itemCount = items.length;
+      const itemCount = itemsToPrint.length;
       const isSmallCount = itemCount <= 2;
       const isSingleItem = itemCount === 1;
 
@@ -73,7 +153,7 @@ export function QRPrintUtils({ equipments, selectedEquipments }: QRPrintUtilsPro
       const qrSize = isSmallCount ? 500 : 450;
 
       const qrCodes = await Promise.all(
-        items.map(async (equipment) => ({
+        itemsToPrint.map(async (equipment) => ({
           equipment,
           dataURL: await generateQRCodeDataURL(equipment, qrSize)
         }))
@@ -425,6 +505,8 @@ export function QRPrintUtils({ equipments, selectedEquipments }: QRPrintUtilsPro
     } catch (error) {
       console.error('Error generating QR codes for printing:', error);
       alert('Error generating QR codes for printing');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -436,15 +518,17 @@ export function QRPrintUtils({ equipments, selectedEquipments }: QRPrintUtilsPro
       {/* Mobile View - Context Menu */}
       <div className="sm:hidden">
         <DropdownMenu>
-          <DropdownMenuTrigger asChild disabled={itemsToProcess.length === 0}>
+          <DropdownMenuTrigger asChild disabled={itemsToProcess.length === 0 || isLoading}>
             <Button variant="outline" size="icon">
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-[200px]">
-            <DropdownMenuItem onClick={() => printQRCodes(itemsToProcess)}>
+            <DropdownMenuItem onClick={() => printQRCodes(itemsToProcess)} disabled={isLoading}>
               <Printer className="h-4 w-4 mr-2" />
-              <span>Print Stickers {hasSelection ? `(${selectedEquipments.length})` : `(${equipments.length})`}</span>
+              <span>
+                {isLoading ? 'Generating...' : `Print Stickers ${hasSelection ? `(${selectedEquipments.length})` : '(All)'}`}
+              </span>
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -456,10 +540,10 @@ export function QRPrintUtils({ equipments, selectedEquipments }: QRPrintUtilsPro
           variant="outline"
           size="sm"
           onClick={() => printQRCodes(itemsToProcess)}
-          disabled={itemsToProcess.length === 0}
+          disabled={itemsToProcess.length === 0 || isLoading}
         >
           <Printer className="h-4 w-4 mr-2" />
-          Print Stickers {hasSelection ? `Selected (${selectedEquipments.length})` : `All (${equipments.length})`}
+          {isLoading ? 'Generating...' : `Print Stickers ${hasSelection ? `Selected (${selectedEquipments.length})` : 'All'}`}
         </Button>
       </div>
     </>
