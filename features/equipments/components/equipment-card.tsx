@@ -9,10 +9,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { CheckCircle2, XCircle, QrCode, Edit, Trash2, User, MapPin, Phone, Mail, FileText, Clock } from 'lucide-react';
+import { CheckCircle2, XCircle, QrCode, Edit, Trash2, User, MapPin, Phone, Mail, FileText, Clock, Eye } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-import { QRCodeDisplay } from '@/components/qr-code-display';
 import { AlertModal } from '@/components/modal/alert-modal';
 import { deleteEquipmentAction } from '@/actions/equipment';
 import { Separator } from '@/components/ui/separator';
@@ -27,7 +26,7 @@ interface EquipmentCardProps {
 }
 
 export function EquipmentCard({ equipment, isSelected, onSelectionChange }: EquipmentCardProps) {
-  const [showQR, setShowQR] = useState(false);
+
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
@@ -260,11 +259,12 @@ export function EquipmentCard({ equipment, isSelected, onSelectionChange }: Equi
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setShowQR(!showQR)}
+                    onClick={() => window.open(`${process.env.NEXT_PUBLIC_BASE_URL || 'https://localhost:3001'}/equipments/${equipment.id}`, '_blank')}
                     className="flex-1 dark:border-gray-600 dark:text-gray-300 dark:hover:bg-gray-700"
+                    title="View Equipment"
                   >
-                    <QrCode className="h-4 w-4 mr-2" />
-                    QR Code
+                    <Eye className="h-4 w-4 mr-2" />
+                    Show
                   </Button>
                   <Button
                     variant="outline"
@@ -285,19 +285,6 @@ export function EquipmentCard({ equipment, isSelected, onSelectionChange }: Equi
                     Delete
                   </Button>
                 </div>
-
-                {showQR && (
-                  <div className="mt-4 p-2 border rounded-lg bg-white dark:bg-gray-800 dark:border-gray-700 shadow-sm">
-                    <QRCodeDisplay
-                      value={`${process.env.NEXT_PUBLIC_BASE_URL || 'https://localhost:3001'}/equipments/${equipment.id}`}
-                      size={120}
-                      className="mx-auto"
-                    />
-                    <p className="text-xs text-center mt-1 text-gray-600 dark:text-gray-400">
-                      {`${equipment.brand} ${equipment.model}`}
-                    </p>
-                  </div>
-                )}
               </div>
             </AccordionContent>
           </AccordionItem>

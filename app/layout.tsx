@@ -21,7 +21,7 @@ const META_THEME_COLORS = {
 
 export const metadata: Metadata = {
   title: 'DENR - Chainsaw Registry',
-  description: 'This is a Chainsaw Registry for the DENR website.',
+  description: 'This is a Chainsaw Registry for the CENRO Alaminos.',
 };
 
 export const viewport: Viewport = {

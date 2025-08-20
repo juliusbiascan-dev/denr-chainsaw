@@ -48,10 +48,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 
 export default function EquipmentForm({
   initialData,
-  pageTitle
+  pageTitle,
+  showProcessingStatus = true
 }: {
   initialData: Equipment | null;
   pageTitle: string;
+  showProcessingStatus?: boolean;
 }) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -1340,102 +1342,70 @@ export default function EquipmentForm({
 
 
             {/* Application Status and Processing Section */}
-            <div className='space-y-6'>
-              <h3 className='text-lg font-semibold text-foreground'>Application Status and Processing</h3>
+            {showProcessingStatus && (
+              <div className='space-y-6'>
+                <h3 className='text-lg font-semibold text-foreground'>Application Status and Processing</h3>
 
-              <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
+                <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
+                  <FormField
+                    control={form.control}
+                    name='initialApplicationStatus'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Initial Application Status</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder='Select application status' />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="PENDING">Pending</SelectItem>
+                            <SelectItem value="ACCEPTED">Accepted</SelectItem>
+                            <SelectItem value="REJECTED">Rejected</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name='inspectionResult'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Inspection Result</FormLabel>
+                        <Select onValueChange={field.onChange} value={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder='Select inspection result' />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="PENDING">Pending</SelectItem>
+                            <SelectItem value="PASSED">Passed</SelectItem>
+                            <SelectItem value="FAILED">Failed</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+
                 <FormField
                   control={form.control}
-                  name='initialApplicationStatus'
+                  name='initialApplicationRemarks'
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Initial Application Status</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder='Select application status' />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="PENDING">Pending</SelectItem>
-                          <SelectItem value="ACCEPTED">Accepted</SelectItem>
-                          <SelectItem value="REJECTED">Rejected</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name='inspectionResult'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Inspection Result</FormLabel>
-                      <Select onValueChange={field.onChange} value={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder='Select inspection result' />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="PENDING">Pending</SelectItem>
-                          <SelectItem value="PASSED">Passed</SelectItem>
-                          <SelectItem value="FAILED">Failed</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <FormField
-                control={form.control}
-                name='initialApplicationRemarks'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Initial Application Remarks</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder='Enter application remarks'
-                        className='resize-none'
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name='inspectionRemarks'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Inspection Remarks</FormLabel>
-                    <FormControl>
-                      <Textarea
-                        placeholder='Enter inspection remarks'
-                        className='resize-none'
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
-                <FormField
-                  control={form.control}
-                  name='orNumber'
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>OR Number</FormLabel>
+                      <FormLabel>Initial Application Remarks</FormLabel>
                       <FormControl>
-                        <Input placeholder='Enter OR number' {...field} />
+                        <Textarea
+                          placeholder='Enter application remarks'
+                          className='resize-none'
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -1444,117 +1414,151 @@ export default function EquipmentForm({
 
                 <FormField
                   control={form.control}
-                  name='orDate'
+                  name='inspectionRemarks'
                   render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>OR Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
+                    <FormItem>
+                      <FormLabel>Inspection Remarks</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder='Enter inspection remarks'
+                          className='resize-none'
+                          {...field}
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
 
+                <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
+                  <FormField
+                    control={form.control}
+                    name='orNumber'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>OR Number</FormLabel>
+                        <FormControl>
+                          <Input placeholder='Enter OR number' {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name='orDate'
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>OR Date</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "w-full pl-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value ? (
+                                  format(field.value, "PPP")
+                                ) : (
+                                  <span>Pick a date</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name='expiryDate'
+                    render={({ field }) => (
+                      <FormItem className="flex flex-col">
+                        <FormLabel>Expiry Date</FormLabel>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant={"outline"}
+                                className={cn(
+                                  "w-full pl-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value ? (
+                                  format(field.value, "PPP")
+                                ) : (
+                                  <span>Pick a date</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-auto p-0" align="start">
+                            <Calendar
+                              mode="single"
+                              selected={field.value}
+                              onSelect={field.onChange}
+                              initialFocus
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Data Privacy Consent Section */}
+            <div className='space-y-6'>
+              <h3 className='text-lg font-semibold text-foreground'>Data Privacy Act Consent</h3>
+              <div className='rounded-lg border p-4 bg-muted/50'>
+                <p className='text-sm text-muted-foreground mb-4'>
+                  Compliance to "Data Privacy Act of 2012".
+                </p>
+                <p className='text-sm mb-4'>
+                  In submitting this form I agree to my details being used for the purposes of
+                  Chainsaw Registration. The information will only be accessed by DENR Staff. I
+                  understand my data will be held securely and will not be distributed to third
+                  parties.
+                </p>
                 <FormField
                   control={form.control}
-                  name='expiryDate'
+                  name='dataPrivacyConsent'
                   render={({ field }) => (
-                    <FormItem className="flex flex-col">
-                      <FormLabel>Expiry Date</FormLabel>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant={"outline"}
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                format(field.value, "PPP")
-                              ) : (
-                                <span>Pick a date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            initialFocus
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      <FormMessage />
+                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                      <FormControl>
+                        <Checkbox
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                        />
+                      </FormControl>
+                      <div className="space-y-1 leading-none">
+                        <FormLabel className="text-sm font-normal">
+                          I agree to the Data Privacy Act consent
+                        </FormLabel>
+                        <FormMessage />
+                      </div>
                     </FormItem>
                   )}
-
                 />
-                {/* Data Privacy Consent Section */}
-                <div className='space-y-6'>
-                  <h3 className='text-lg font-semibold text-foreground'>Data Privacy Act Consent</h3>
-                  <div className='rounded-lg border p-4 bg-muted/50'>
-                    <p className='text-sm text-muted-foreground mb-4'>
-                      Compliance to "Data Privacy Act of 2012".
-                    </p>
-                    <p className='text-sm mb-4'>
-                      In submitting this form I agree to my details being used for the purposes of
-                      Chainsaw Registration. The information will only be accessed by DENR Staff. I
-                      understand my data will be held securely and will not be distributed to third
-                      parties.
-                    </p>
-                    <FormField
-                      control={form.control}
-                      name='dataPrivacyConsent'
-                      render={({ field }) => (
-                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                          <FormControl>
-                            <Checkbox
-                              checked={field.value}
-                              onCheckedChange={field.onChange}
-                            />
-                          </FormControl>
-                          <div className="space-y-1 leading-none">
-                            <FormLabel className="text-sm font-normal">
-                              I agree to the Data Privacy Act consent
-                            </FormLabel>
-                            <FormMessage />
-                          </div>
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
               </div>
             </div>
 

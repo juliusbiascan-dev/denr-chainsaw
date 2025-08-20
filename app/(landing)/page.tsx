@@ -5,8 +5,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion";
 import { ModeToggle } from '@/components/layout/ThemeToggle/theme-toggle';
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+
+  const router = useRouter();
+
   return (
 
     <div className="min-h-screen w-full bg-white dark:bg-zinc-900 flex flex-col">
@@ -19,7 +24,7 @@ export default function Home() {
               <ModeToggle />
             </div>
             <Button className="bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800" asChild>
-              <a href="/dashboard" target="_blank" rel="noopener noreferrer">Dashboard</a>
+              <Link href="/dashboard">Dashboard</Link>
             </Button>
           </div>
         </div>
@@ -38,7 +43,7 @@ export default function Home() {
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center mb-2">
                 <Button size="lg" className="bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800" asChild>
-                  <a href="/dashboard/equipments/new" target="_blank" rel="noopener noreferrer">Start Registration</a>
+                  <Link href="/equipments/registration">Start Registration</Link>
                 </Button>
                 <Button size="lg" variant="outline" className="dark:border-green-700 dark:text-green-400" asChild>
                   <a href="mailto:cenroalaminos@denr.gov.ph">Contact DENR</a>

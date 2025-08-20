@@ -7,7 +7,8 @@ export const publicRoutes = [
   "/",
   "/auth/new-verification",
   "/auth/logout",
-  "/api/uploadthing"
+  "/api/uploadthing",
+  "/equipments/registration"
 ];
 
 /**
