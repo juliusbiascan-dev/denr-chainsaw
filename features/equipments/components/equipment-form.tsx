@@ -42,8 +42,7 @@ import { EquipmentSchema } from '@/schemas/equipment';
 import { FormError } from '@/components/form-error';
 import { FormSuccess } from '@/components/form-success';
 import { Textarea } from '@/components/ui/textarea';
-import { FileUploader } from '@/components/file-uploader';
-import { UploadButton, UploadDropzone } from '@/lib/uploadthing';
+import { UploadDropzone } from '@/lib/uploadthing';
 import { toast } from 'sonner';
 import { Checkbox } from '@/components/ui/checkbox';
 
@@ -72,6 +71,10 @@ export default function EquipmentForm({
   const [lguBusinessPermitUrl, setLguBusinessPermitUrl] = useState<string>(initialData?.lguBusinessPermitUrl || '');
   const [woodProcessingPermitUrl, setWoodProcessingPermitUrl] = useState<string>(initialData?.woodProcessingPermitUrl || '');
   const [governmentCertificationUrl, setGovernmentCertificationUrl] = useState<string>(initialData?.governmentCertificationUrl || '');
+
+  // Renewal Registration URLs state
+  const [renewalRegistrationApplicationUrl, setRenewalRegistrationApplicationUrl] = useState<string>(initialData?.renewalRegistrationApplicationUrl || '');
+  const [renewalPreviousCertificateOfRegistrationUrl, setRenewalPreviousCertificateOfRegistrationUrl] = useState<string>(initialData?.renewalPreviousCertificateOfRegistrationUrl || '');
 
   const isEditing = !!initialData;
 
@@ -106,6 +109,11 @@ export default function EquipmentForm({
     stencilSerialNumberPictureUrl: initialData?.stencilSerialNumberPictureUrl || '',
     chainsawPictureUrl: initialData?.chainsawPictureUrl || '',
 
+    // Renewal Registration Requirements
+    previousCertificateOfRegistrationNumber: initialData?.previousCertificateOfRegistrationNumber || '',
+    renewalRegistrationApplicationUrl: initialData?.renewalRegistrationApplicationUrl || '',
+    renewalPreviousCertificateOfRegistrationUrl: initialData?.renewalPreviousCertificateOfRegistrationUrl || '',
+
     // Additional Requirements
     forestTenureAgreementUrl: initialData?.forestTenureAgreementUrl || '',
     businessPermitUrl: initialData?.businessPermitUrl || '',
@@ -115,7 +123,16 @@ export default function EquipmentForm({
     governmentCertificationUrl: initialData?.governmentCertificationUrl || '',
 
     // Data Privacy Consent
-    dataPrivacyConsent: initialData?.dataPrivacyConsent || false
+    dataPrivacyConsent: initialData?.dataPrivacyConsent || false,
+
+    // Application Status and Processing
+    initialApplicationStatus: initialData?.initialApplicationStatus || undefined,
+    initialApplicationRemarks: initialData?.initialApplicationRemarks || '',
+    inspectionResult: initialData?.inspectionResult || undefined,
+    inspectionRemarks: initialData?.inspectionRemarks || '',
+    orNumber: initialData?.orNumber || '',
+    orDate: initialData?.orDate ? new Date(initialData.orDate) : undefined,
+    expiryDate: initialData?.expiryDate ? new Date(initialData.expiryDate) : undefined
   };
 
   const form = useForm<z.infer<typeof EquipmentSchema>>({
@@ -141,7 +158,9 @@ export default function EquipmentForm({
       certificateOfRegistrationUrl,
       lguBusinessPermitUrl,
       woodProcessingPermitUrl,
-      governmentCertificationUrl
+      governmentCertificationUrl,
+      renewalRegistrationApplicationUrl,
+      renewalPreviousCertificateOfRegistrationUrl
     };
 
     startTransition(async () => {
@@ -301,34 +320,57 @@ export default function EquipmentForm({
                     <FormLabel>Owner ID Image</FormLabel>
                     <FormControl>
                       <div className="space-y-4">
-                        <UploadDropzone
-                          endpoint="imageUploader"
-                          onClientUploadComplete={(res: any) => {
-                            if (res && res[0]) {
-                              setOwnerIdUrl(res[0].url);
-                              toast.success("ID image uploaded successfully!");
-                            }
-                          }}
-                          onUploadError={(error: Error) => {
-                            console.error("Upload error:", error);
-                            toast.error(`Error uploading image: ${error.message}`);
-                          }}
-                          className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
-                        />
+                        <div>
+                          <p className="text-sm font-medium mb-2">Upload File:</p>
+                          <UploadDropzone
+                            endpoint="imageUploader"
+                            onClientUploadComplete={(res: any) => {
+                              if (res && res[0]) {
+                                setOwnerIdUrl(res[0].url);
+                                field.onChange(res[0].url);
+                                toast.success("ID image uploaded successfully!");
+                              }
+                            }}
+                            onUploadError={(error: Error) => {
+                              console.error("Upload error:", error);
+                              toast.error(`Error uploading image: ${error.message}`);
+                            }}
+                            className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
+                          />
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="flex-1 h-px bg-border"></div>
+                          <span className="text-sm text-muted-foreground">OR</span>
+                          <div className="flex-1 h-px bg-border"></div>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium mb-2">Enter URL:</p>
+                          <Input
+                            placeholder='Enter image URL (e.g., https://example.com/image.jpg)'
+                            value={ownerIdUrl}
+                            onChange={(e) => {
+                              setOwnerIdUrl(e.target.value);
+                              field.onChange(e.target.value);
+                            }}
+                          />
+                        </div>
                       </div>
                     </FormControl>
                     {ownerIdUrl && (
                       <div className='mt-2'>
-                        <p className='text-sm text-muted-foreground'>Uploaded ID Image:</p>
+                        <p className='text-sm text-muted-foreground'>Preview:</p>
                         <img
                           src={ownerIdUrl}
                           alt="Owner ID"
                           className='mt-1 h-20 w-auto rounded border'
+                          onError={(e) => {
+                            e.currentTarget.style.display = 'none';
+                          }}
                         />
                       </div>
                     )}
                     <FormDescription>
-                      Upload a clear image of the owner's ID (Government ID, Driver's License, etc.)
+                      Upload a clear image of the owner's ID or enter an image URL from another source
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -565,6 +607,137 @@ export default function EquipmentForm({
               />
             </div>
 
+            {/* Renewal Registration Requirements Section */}
+            {!form.watch('isNew') && (
+              <div className='space-y-6'>
+                <h3 className='text-lg font-semibold text-foreground'>Renewal Registration Requirements</h3>
+                <p className='text-sm text-muted-foreground'>
+                  The following documents are required for renewal of registration.
+                </p>
+
+                {/* Previous Certificate of Registration Number */}
+                <FormField
+                  control={form.control}
+                  name='previousCertificateOfRegistrationNumber'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Previous Certificate of Registration Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder='Enter previous certificate number' {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Enter the certificate number from your previous registration
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Renewal Registration Application */}
+                <FormField
+                  control={form.control}
+                  name='renewalRegistrationApplicationUrl'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Signed Chainsaw Registration Application for Renewal</FormLabel>
+                      <FormControl>
+                        <div className="space-y-4">
+                          <div>
+                            <p className="text-sm font-medium mb-2">Upload File:</p>
+                            <UploadDropzone
+                              endpoint="imageUploader"
+                              onClientUploadComplete={(res: any) => {
+                                if (res && res[0]) {
+                                  setRenewalRegistrationApplicationUrl(res[0].url);
+                                  field.onChange(res[0].url);
+                                  toast.success("Renewal registration application uploaded successfully!");
+                                }
+                              }}
+                              onUploadError={(error: Error) => {
+                                toast.error(`Error uploading file: ${error.message}`);
+                              }}
+                              className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
+                            />
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="flex-1 h-px bg-border"></div>
+                            <span className="text-sm text-muted-foreground">OR</span>
+                            <div className="flex-1 h-px bg-border"></div>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium mb-2">Enter URL:</p>
+                            <Input
+                              placeholder='Enter image URL (e.g., https://example.com/renewal-application.jpg)'
+                              value={renewalRegistrationApplicationUrl}
+                              onChange={(e) => {
+                                setRenewalRegistrationApplicationUrl(e.target.value);
+                                field.onChange(e.target.value);
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </FormControl>
+                      <FormDescription>
+                        Upload an image file (max 4 MB) or enter an image URL from another source
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Renewal Previous Certificate of Registration */}
+                <FormField
+                  control={form.control}
+                  name='renewalPreviousCertificateOfRegistrationUrl'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Previous Certificate of Registration (Image)</FormLabel>
+                      <FormControl>
+                        <div className="space-y-4">
+                          <div>
+                            <p className="text-sm font-medium mb-2">Upload File:</p>
+                            <UploadDropzone
+                              endpoint="imageUploader"
+                              onClientUploadComplete={(res: any) => {
+                                if (res && res[0]) {
+                                  setRenewalPreviousCertificateOfRegistrationUrl(res[0].url);
+                                  field.onChange(res[0].url);
+                                  toast.success("Previous certificate uploaded successfully!");
+                                }
+                              }}
+                              onUploadError={(error: Error) => {
+                                toast.error(`Error uploading file: ${error.message}`);
+                              }}
+                              className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
+                            />
+                          </div>
+                          <div className="flex items-center gap-4">
+                            <div className="flex-1 h-px bg-border"></div>
+                            <span className="text-sm text-muted-foreground">OR</span>
+                            <div className="flex-1 h-px bg-border"></div>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium mb-2">Enter URL:</p>
+                            <Input
+                              placeholder='Enter image URL (e.g., https://example.com/previous-certificate.jpg)'
+                              value={renewalPreviousCertificateOfRegistrationUrl}
+                              onChange={(e) => {
+                                setRenewalPreviousCertificateOfRegistrationUrl(e.target.value);
+                                field.onChange(e.target.value);
+                              }}
+                            />
+                          </div>
+                        </div>
+                      </FormControl>
+                      <FormDescription>
+                        Upload an image file (max 4 MB) or enter an image URL from another source
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
             {/* Document Requirements Section */}
             <div className='space-y-6'>
               <h3 className='text-lg font-semibold text-foreground'>Document Requirements (New Chainsaw)</h3>
@@ -583,22 +756,44 @@ export default function EquipmentForm({
                   <FormItem>
                     <FormLabel>Signed Chainsaw Registration Application *</FormLabel>
                     <FormControl>
-                      <UploadDropzone
-                        endpoint="imageUploader"
-                        onClientUploadComplete={(res: any) => {
-                          if (res && res[0]) {
-                            setRegistrationApplicationUrl(res[0].url);
-                            toast.success("Registration application uploaded successfully!");
-                          }
-                        }}
-                        onUploadError={(error: Error) => {
-                          toast.error(`Error uploading file: ${error.message}`);
-                        }}
-                        className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
-                      />
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-sm font-medium mb-2">Upload File:</p>
+                          <UploadDropzone
+                            endpoint="imageUploader"
+                            onClientUploadComplete={(res: any) => {
+                              if (res && res[0]) {
+                                setRegistrationApplicationUrl(res[0].url);
+                                field.onChange(res[0].url);
+                                toast.success("Registration application uploaded successfully!");
+                              }
+                            }}
+                            onUploadError={(error: Error) => {
+                              toast.error(`Error uploading file: ${error.message}`);
+                            }}
+                            className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
+                          />
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="flex-1 h-px bg-border"></div>
+                          <span className="text-sm text-muted-foreground">OR</span>
+                          <div className="flex-1 h-px bg-border"></div>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium mb-2">Enter URL:</p>
+                          <Input
+                            placeholder='Enter image URL (e.g., https://example.com/registration.jpg)'
+                            value={registrationApplicationUrl}
+                            onChange={(e) => {
+                              setRegistrationApplicationUrl(e.target.value);
+                              field.onChange(e.target.value);
+                            }}
+                          />
+                        </div>
+                      </div>
                     </FormControl>
                     <FormDescription>
-                      Upload 1 supported file: PDF or image. Max 100 MB.
+                      Upload an image file (max 4 MB) or enter an image URL from another source
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -613,22 +808,44 @@ export default function EquipmentForm({
                   <FormItem>
                     <FormLabel>Official Receipt of the Chainsaw *</FormLabel>
                     <FormControl>
-                      <UploadDropzone
-                        endpoint="imageUploader"
-                        onClientUploadComplete={(res: any) => {
-                          if (res && res[0]) {
-                            setOfficialReceiptUrl(res[0].url);
-                            toast.success("Official receipt uploaded successfully!");
-                          }
-                        }}
-                        onUploadError={(error: Error) => {
-                          toast.error(`Error uploading file: ${error.message}`);
-                        }}
-                        className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
-                      />
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-sm font-medium mb-2">Upload File:</p>
+                          <UploadDropzone
+                            endpoint="imageUploader"
+                            onClientUploadComplete={(res: any) => {
+                              if (res && res[0]) {
+                                setOfficialReceiptUrl(res[0].url);
+                                field.onChange(res[0].url);
+                                toast.success("Official receipt uploaded successfully!");
+                              }
+                            }}
+                            onUploadError={(error: Error) => {
+                              toast.error(`Error uploading file: ${error.message}`);
+                            }}
+                            className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
+                          />
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="flex-1 h-px bg-border"></div>
+                          <span className="text-sm text-muted-foreground">OR</span>
+                          <div className="flex-1 h-px bg-border"></div>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium mb-2">Enter URL:</p>
+                          <Input
+                            placeholder='Enter image URL (e.g., https://example.com/receipt.jpg)'
+                            value={officialReceiptUrl}
+                            onChange={(e) => {
+                              setOfficialReceiptUrl(e.target.value);
+                              field.onChange(e.target.value);
+                            }}
+                          />
+                        </div>
+                      </div>
                     </FormControl>
                     <FormDescription>
-                      Upload 1 supported file: PDF or image. Max 100 MB.
+                      Upload an image file (max 4 MB) or enter an image URL from another source
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -643,22 +860,44 @@ export default function EquipmentForm({
                   <FormItem>
                     <FormLabel>SPA (if the applicant is not the owner of the chainsaw)</FormLabel>
                     <FormControl>
-                      <UploadDropzone
-                        endpoint="imageUploader"
-                        onClientUploadComplete={(res: any) => {
-                          if (res && res[0]) {
-                            setSpaUrl(res[0].url);
-                            toast.success("SPA uploaded successfully!");
-                          }
-                        }}
-                        onUploadError={(error: Error) => {
-                          toast.error(`Error uploading file: ${error.message}`);
-                        }}
-                        className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
-                      />
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-sm font-medium mb-2">Upload File:</p>
+                          <UploadDropzone
+                            endpoint="imageUploader"
+                            onClientUploadComplete={(res: any) => {
+                              if (res && res[0]) {
+                                setSpaUrl(res[0].url);
+                                field.onChange(res[0].url);
+                                toast.success("SPA uploaded successfully!");
+                              }
+                            }}
+                            onUploadError={(error: Error) => {
+                              toast.error(`Error uploading file: ${error.message}`);
+                            }}
+                            className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
+                          />
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="flex-1 h-px bg-border"></div>
+                          <span className="text-sm text-muted-foreground">OR</span>
+                          <div className="flex-1 h-px bg-border"></div>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium mb-2">Enter URL:</p>
+                          <Input
+                            placeholder='Enter image URL (e.g., https://example.com/spa.jpg)'
+                            value={spaUrl}
+                            onChange={(e) => {
+                              setSpaUrl(e.target.value);
+                              field.onChange(e.target.value);
+                            }}
+                          />
+                        </div>
+                      </div>
                     </FormControl>
                     <FormDescription>
-                      Upload 1 supported file: PDF or image. Max 100 MB.
+                      Upload an image file (max 4 MB) or enter an image URL from another source
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -673,22 +912,44 @@ export default function EquipmentForm({
                   <FormItem>
                     <FormLabel>Stencil Serial Number of Chainsaw (Picture) *</FormLabel>
                     <FormControl>
-                      <UploadDropzone
-                        endpoint="imageUploader"
-                        onClientUploadComplete={(res: any) => {
-                          if (res && res[0]) {
-                            setStencilSerialNumberPictureUrl(res[0].url);
-                            toast.success("Stencil serial number picture uploaded successfully!");
-                          }
-                        }}
-                        onUploadError={(error: Error) => {
-                          toast.error(`Error uploading image: ${error.message}`);
-                        }}
-                        className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
-                      />
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-sm font-medium mb-2">Upload File:</p>
+                          <UploadDropzone
+                            endpoint="imageUploader"
+                            onClientUploadComplete={(res: any) => {
+                              if (res && res[0]) {
+                                setStencilSerialNumberPictureUrl(res[0].url);
+                                field.onChange(res[0].url);
+                                toast.success("Stencil serial number picture uploaded successfully!");
+                              }
+                            }}
+                            onUploadError={(error: Error) => {
+                              toast.error(`Error uploading image: ${error.message}`);
+                            }}
+                            className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
+                          />
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="flex-1 h-px bg-border"></div>
+                          <span className="text-sm text-muted-foreground">OR</span>
+                          <div className="flex-1 h-px bg-border"></div>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium mb-2">Enter URL:</p>
+                          <Input
+                            placeholder='Enter image URL (e.g., https://example.com/stencil.jpg)'
+                            value={stencilSerialNumberPictureUrl}
+                            onChange={(e) => {
+                              setStencilSerialNumberPictureUrl(e.target.value);
+                              field.onChange(e.target.value);
+                            }}
+                          />
+                        </div>
+                      </div>
                     </FormControl>
                     <FormDescription>
-                      Upload 1 supported file: PDF or image. Max 100 MB.
+                      Upload an image file (max 4 MB) or enter an image URL from another source
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -703,28 +964,52 @@ export default function EquipmentForm({
                   <FormItem>
                     <FormLabel>Picture of the Chainsaw *</FormLabel>
                     <FormControl>
-                      <UploadDropzone
-                        endpoint="imageUploader"
-                        onClientUploadComplete={(res: any) => {
-                          if (res && res[0]) {
-                            setChainsawPictureUrl(res[0].url);
-                            toast.success("Chainsaw picture uploaded successfully!");
-                          }
-                        }}
-                        onUploadError={(error: Error) => {
-                          toast.error(`Error uploading image: ${error.message}`);
-                        }}
-                        className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
-                      />
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-sm font-medium mb-2">Upload File:</p>
+                          <UploadDropzone
+                            endpoint="imageUploader"
+                            onClientUploadComplete={(res: any) => {
+                              if (res && res[0]) {
+                                setChainsawPictureUrl(res[0].url);
+                                field.onChange(res[0].url);
+                                toast.success("Chainsaw picture uploaded successfully!");
+                              }
+                            }}
+                            onUploadError={(error: Error) => {
+                              toast.error(`Error uploading image: ${error.message}`);
+                            }}
+                            className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
+                          />
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="flex-1 h-px bg-border"></div>
+                          <span className="text-sm text-muted-foreground">OR</span>
+                          <div className="flex-1 h-px bg-border"></div>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium mb-2">Enter URL:</p>
+                          <Input
+                            placeholder='Enter image URL (e.g., https://example.com/chainsaw.jpg)'
+                            value={chainsawPictureUrl}
+                            onChange={(e) => {
+                              setChainsawPictureUrl(e.target.value);
+                              field.onChange(e.target.value);
+                            }}
+                          />
+                        </div>
+                      </div>
                     </FormControl>
                     <FormDescription>
-                      Upload 1 supported file: PDF or image. Max 100 MB.
+                      Upload an image file (max 4 MB) or enter an image URL from another source
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
+
+
 
             {/* Additional Requirements Section */}
             <div className='space-y-6'>
@@ -744,22 +1029,44 @@ export default function EquipmentForm({
                   <FormItem>
                     <FormLabel>Forest Tenure Agreement (if Tenural Instrument Holder)</FormLabel>
                     <FormControl>
-                      <UploadDropzone
-                        endpoint="imageUploader"
-                        onClientUploadComplete={(res: any) => {
-                          if (res && res[0]) {
-                            setForestTenureAgreementUrl(res[0].url);
-                            toast.success("Forest tenure agreement uploaded successfully!");
-                          }
-                        }}
-                        onUploadError={(error: Error) => {
-                          toast.error(`Error uploading file: ${error.message}`);
-                        }}
-                        className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
-                      />
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-sm font-medium mb-2">Upload File:</p>
+                          <UploadDropzone
+                            endpoint="imageUploader"
+                            onClientUploadComplete={(res: any) => {
+                              if (res && res[0]) {
+                                setForestTenureAgreementUrl(res[0].url);
+                                field.onChange(res[0].url);
+                                toast.success("Forest tenure agreement uploaded successfully!");
+                              }
+                            }}
+                            onUploadError={(error: Error) => {
+                              toast.error(`Error uploading file: ${error.message}`);
+                            }}
+                            className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
+                          />
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="flex-1 h-px bg-border"></div>
+                          <span className="text-sm text-muted-foreground">OR</span>
+                          <div className="flex-1 h-px bg-border"></div>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium mb-2">Enter URL:</p>
+                          <Input
+                            placeholder='Enter image URL (e.g., https://example.com/agreement.jpg)'
+                            value={forestTenureAgreementUrl}
+                            onChange={(e) => {
+                              setForestTenureAgreementUrl(e.target.value);
+                              field.onChange(e.target.value);
+                            }}
+                          />
+                        </div>
+                      </div>
                     </FormControl>
                     <FormDescription>
-                      Upload 1 supported file: PDF or image. Max 100 MB.
+                      Upload an image file (max 4 MB) or enter an image URL from another source
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -774,22 +1081,44 @@ export default function EquipmentForm({
                   <FormItem>
                     <FormLabel>Business Permit (If Business owner)</FormLabel>
                     <FormControl>
-                      <UploadDropzone
-                        endpoint="imageUploader"
-                        onClientUploadComplete={(res: any) => {
-                          if (res && res[0]) {
-                            setBusinessPermitUrl(res[0].url);
-                            toast.success("Business permit uploaded successfully!");
-                          }
-                        }}
-                        onUploadError={(error: Error) => {
-                          toast.error(`Error uploading file: ${error.message}`);
-                        }}
-                        className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
-                      />
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-sm font-medium mb-2">Upload File:</p>
+                          <UploadDropzone
+                            endpoint="imageUploader"
+                            onClientUploadComplete={(res: any) => {
+                              if (res && res[0]) {
+                                setBusinessPermitUrl(res[0].url);
+                                field.onChange(res[0].url);
+                                toast.success("Business permit uploaded successfully!");
+                              }
+                            }}
+                            onUploadError={(error: Error) => {
+                              toast.error(`Error uploading file: ${error.message}`);
+                            }}
+                            className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
+                          />
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="flex-1 h-px bg-border"></div>
+                          <span className="text-sm text-muted-foreground">OR</span>
+                          <div className="flex-1 h-px bg-border"></div>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium mb-2">Enter URL:</p>
+                          <Input
+                            placeholder='Enter image URL (e.g., https://example.com/permit.jpg)'
+                            value={businessPermitUrl}
+                            onChange={(e) => {
+                              setBusinessPermitUrl(e.target.value);
+                              field.onChange(e.target.value);
+                            }}
+                          />
+                        </div>
+                      </div>
                     </FormControl>
                     <FormDescription>
-                      Upload 1 supported file: PDF or image. Max 100 MB.
+                      Upload an image file (max 4 MB) or enter an image URL from another source
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -804,22 +1133,44 @@ export default function EquipmentForm({
                   <FormItem>
                     <FormLabel>For Private Tree Plantation Owner - Certificate of Registration</FormLabel>
                     <FormControl>
-                      <UploadDropzone
-                        endpoint="imageUploader"
-                        onClientUploadComplete={(res: any) => {
-                          if (res && res[0]) {
-                            setCertificateOfRegistrationUrl(res[0].url);
-                            toast.success("Certificate of registration uploaded successfully!");
-                          }
-                        }}
-                        onUploadError={(error: Error) => {
-                          toast.error(`Error uploading file: ${error.message}`);
-                        }}
-                        className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
-                      />
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-sm font-medium mb-2">Upload File:</p>
+                          <UploadDropzone
+                            endpoint="imageUploader"
+                            onClientUploadComplete={(res: any) => {
+                              if (res && res[0]) {
+                                setCertificateOfRegistrationUrl(res[0].url);
+                                field.onChange(res[0].url);
+                                toast.success("Certificate of registration uploaded successfully!");
+                              }
+                            }}
+                            onUploadError={(error: Error) => {
+                              toast.error(`Error uploading file: ${error.message}`);
+                            }}
+                            className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
+                          />
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="flex-1 h-px bg-border"></div>
+                          <span className="text-sm text-muted-foreground">OR</span>
+                          <div className="flex-1 h-px bg-border"></div>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium mb-2">Enter URL:</p>
+                          <Input
+                            placeholder='Enter image URL (e.g., https://example.com/certificate.jpg)'
+                            value={certificateOfRegistrationUrl}
+                            onChange={(e) => {
+                              setCertificateOfRegistrationUrl(e.target.value);
+                              field.onChange(e.target.value);
+                            }}
+                          />
+                        </div>
+                      </div>
                     </FormControl>
                     <FormDescription>
-                      Upload 1 supported file: PDF or image. Max 100 MB.
+                      Upload an image file (max 4 MB) or enter an image URL from another source
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -834,22 +1185,44 @@ export default function EquipmentForm({
                   <FormItem>
                     <FormLabel>Business Permit from LGU or affidavit that the chainsaw is needed if applicants/profession/work and will be used for legal purpose</FormLabel>
                     <FormControl>
-                      <UploadDropzone
-                        endpoint="imageUploader"
-                        onClientUploadComplete={(res: any) => {
-                          if (res && res[0]) {
-                            setLguBusinessPermitUrl(res[0].url);
-                            toast.success("LGU business permit uploaded successfully!");
-                          }
-                        }}
-                        onUploadError={(error: Error) => {
-                          toast.error(`Error uploading file: ${error.message}`);
-                        }}
-                        className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
-                      />
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-sm font-medium mb-2">Upload File:</p>
+                          <UploadDropzone
+                            endpoint="imageUploader"
+                            onClientUploadComplete={(res: any) => {
+                              if (res && res[0]) {
+                                setLguBusinessPermitUrl(res[0].url);
+                                field.onChange(res[0].url);
+                                toast.success("LGU business permit uploaded successfully!");
+                              }
+                            }}
+                            onUploadError={(error: Error) => {
+                              toast.error(`Error uploading file: ${error.message}`);
+                            }}
+                            className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
+                          />
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="flex-1 h-px bg-border"></div>
+                          <span className="text-sm text-muted-foreground">OR</span>
+                          <div className="flex-1 h-px bg-border"></div>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium mb-2">Enter URL:</p>
+                          <Input
+                            placeholder='Enter image URL (e.g., https://example.com/lgu-permit.jpg)'
+                            value={lguBusinessPermitUrl}
+                            onChange={(e) => {
+                              setLguBusinessPermitUrl(e.target.value);
+                              field.onChange(e.target.value);
+                            }}
+                          />
+                        </div>
+                      </div>
                     </FormControl>
                     <FormDescription>
-                      Upload 1 supported file: PDF or image. Max 100 MB.
+                      Upload an image file (max 4 MB) or enter an image URL from another source
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -864,22 +1237,44 @@ export default function EquipmentForm({
                   <FormItem>
                     <FormLabel>For Wood Processor - Wood processing plant permit</FormLabel>
                     <FormControl>
-                      <UploadDropzone
-                        endpoint="imageUploader"
-                        onClientUploadComplete={(res: any) => {
-                          if (res && res[0]) {
-                            setWoodProcessingPermitUrl(res[0].url);
-                            toast.success("Wood processing permit uploaded successfully!");
-                          }
-                        }}
-                        onUploadError={(error: Error) => {
-                          toast.error(`Error uploading file: ${error.message}`);
-                        }}
-                        className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
-                      />
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-sm font-medium mb-2">Upload File:</p>
+                          <UploadDropzone
+                            endpoint="imageUploader"
+                            onClientUploadComplete={(res: any) => {
+                              if (res && res[0]) {
+                                setWoodProcessingPermitUrl(res[0].url);
+                                field.onChange(res[0].url);
+                                toast.success("Wood processing permit uploaded successfully!");
+                              }
+                            }}
+                            onUploadError={(error: Error) => {
+                              toast.error(`Error uploading file: ${error.message}`);
+                            }}
+                            className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
+                          />
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="flex-1 h-px bg-border"></div>
+                          <span className="text-sm text-muted-foreground">OR</span>
+                          <div className="flex-1 h-px bg-border"></div>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium mb-2">Enter URL:</p>
+                          <Input
+                            placeholder='Enter image URL (e.g., https://example.com/wood-permit.jpg)'
+                            value={woodProcessingPermitUrl}
+                            onChange={(e) => {
+                              setWoodProcessingPermitUrl(e.target.value);
+                              field.onChange(e.target.value);
+                            }}
+                          />
+                        </div>
+                      </div>
                     </FormControl>
                     <FormDescription>
-                      Upload 1 supported file: PDF or image. Max 100 MB.
+                      Upload an image file (max 4 MB) or enter an image URL from another source
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -894,22 +1289,44 @@ export default function EquipmentForm({
                   <FormItem>
                     <FormLabel>For government and GOCC - Certification from the Head of Office or his/her authorized representative that chainsaws are owned/possessed by the office and use for legal purposes (specify)</FormLabel>
                     <FormControl>
-                      <UploadDropzone
-                        endpoint="imageUploader"
-                        onClientUploadComplete={(res: any) => {
-                          if (res && res[0]) {
-                            setGovernmentCertificationUrl(res[0].url);
-                            toast.success("Government certification uploaded successfully!");
-                          }
-                        }}
-                        onUploadError={(error: Error) => {
-                          toast.error(`Error uploading file: ${error.message}`);
-                        }}
-                        className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
-                      />
+                      <div className="space-y-4">
+                        <div>
+                          <p className="text-sm font-medium mb-2">Upload File:</p>
+                          <UploadDropzone
+                            endpoint="imageUploader"
+                            onClientUploadComplete={(res: any) => {
+                              if (res && res[0]) {
+                                setGovernmentCertificationUrl(res[0].url);
+                                field.onChange(res[0].url);
+                                toast.success("Government certification uploaded successfully!");
+                              }
+                            }}
+                            onUploadError={(error: Error) => {
+                              toast.error(`Error uploading file: ${error.message}`);
+                            }}
+                            className="ut-label:text-sm ut-label:text-muted-foreground ut-button:bg-primary ut-button:text-primary-foreground ut-button:hover:bg-primary/90"
+                          />
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <div className="flex-1 h-px bg-border"></div>
+                          <span className="text-sm text-muted-foreground">OR</span>
+                          <div className="flex-1 h-px bg-border"></div>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium mb-2">Enter URL:</p>
+                          <Input
+                            placeholder='Enter image URL (e.g., https://example.com/certification.jpg)'
+                            value={governmentCertificationUrl}
+                            onChange={(e) => {
+                              setGovernmentCertificationUrl(e.target.value);
+                              field.onChange(e.target.value);
+                            }}
+                          />
+                        </div>
+                      </div>
                     </FormControl>
                     <FormDescription>
-                      Upload 1 supported file: PDF or image. Max 100 MB.
+                      Upload an image file (max 4 MB) or enter an image URL from another source
                     </FormDescription>
                     <FormMessage />
                   </FormItem>
@@ -917,39 +1334,224 @@ export default function EquipmentForm({
               />
             </div>
 
-            {/* Data Privacy Consent Section */}
+
+
+            {/* Application Status and Processing Section */}
             <div className='space-y-6'>
-              <h3 className='text-lg font-semibold text-foreground'>Data Privacy Act Consent</h3>
-              <div className='rounded-lg border p-4 bg-muted/50'>
-                <p className='text-sm text-muted-foreground mb-4'>
-                  Compliance to "Data Privacy Act of 2012".
-                </p>
-                <p className='text-sm mb-4'>
-                  In submitting this form I agree to my details being used for the purposes of
-                  Chainsaw Registration. The information will only be accessed by DENR Staff. I
-                  understand my data will be held securely and will not be distributed to third
-                  parties.
-                </p>
+              <h3 className='text-lg font-semibold text-foreground'>Application Status and Processing</h3>
+
+              <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
                 <FormField
                   control={form.control}
-                  name='dataPrivacyConsent'
+                  name='initialApplicationStatus'
                   render={({ field }) => (
-                    <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                      <FormControl>
-                        <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
-                        />
-                      </FormControl>
-                      <div className="space-y-1 leading-none">
-                        <FormLabel className="text-sm font-normal">
-                          I agree to the Data Privacy Act consent
-                        </FormLabel>
-                        <FormMessage />
-                      </div>
+                    <FormItem>
+                      <FormLabel>Initial Application Status</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder='Select application status' />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="PENDING">Pending</SelectItem>
+                          <SelectItem value="ACCEPTED">Accepted</SelectItem>
+                          <SelectItem value="REJECTED">Rejected</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
+
+                <FormField
+                  control={form.control}
+                  name='inspectionResult'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Inspection Result</FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder='Select inspection result' />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="PENDING">Pending</SelectItem>
+                          <SelectItem value="PASSED">Passed</SelectItem>
+                          <SelectItem value="FAILED">Failed</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+
+              <FormField
+                control={form.control}
+                name='initialApplicationRemarks'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Initial Application Remarks</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder='Enter application remarks'
+                        className='resize-none'
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='inspectionRemarks'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Inspection Remarks</FormLabel>
+                    <FormControl>
+                      <Textarea
+                        placeholder='Enter inspection remarks'
+                        className='resize-none'
+                        {...field}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
+                <FormField
+                  control={form.control}
+                  name='orNumber'
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>OR Number</FormLabel>
+                      <FormControl>
+                        <Input placeholder='Enter OR number' {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='orDate'
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>OR Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name='expiryDate'
+                  render={({ field }) => (
+                    <FormItem className="flex flex-col">
+                      <FormLabel>Expiry Date</FormLabel>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant={"outline"}
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                format(field.value, "PPP")
+                              ) : (
+                                <span>Pick a date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            initialFocus
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+
+                />
+                {/* Data Privacy Consent Section */}
+                <div className='space-y-6'>
+                  <h3 className='text-lg font-semibold text-foreground'>Data Privacy Act Consent</h3>
+                  <div className='rounded-lg border p-4 bg-muted/50'>
+                    <p className='text-sm text-muted-foreground mb-4'>
+                      Compliance to "Data Privacy Act of 2012".
+                    </p>
+                    <p className='text-sm mb-4'>
+                      In submitting this form I agree to my details being used for the purposes of
+                      Chainsaw Registration. The information will only be accessed by DENR Staff. I
+                      understand my data will be held securely and will not be distributed to third
+                      parties.
+                    </p>
+                    <FormField
+                      control={form.control}
+                      name='dataPrivacyConsent'
+                      render={({ field }) => (
+                        <FormItem className="flex flex-row items-start space-x-3 space-y-0">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-none">
+                            <FormLabel className="text-sm font-normal">
+                              I agree to the Data Privacy Act consent
+                            </FormLabel>
+                            <FormMessage />
+                          </div>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 

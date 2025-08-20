@@ -9,7 +9,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { CheckCircle2, XCircle, QrCode, Edit, Trash2, User, MapPin, Phone, Mail, FileText } from 'lucide-react';
+import { CheckCircle2, XCircle, QrCode, Edit, Trash2, User, MapPin, Phone, Mail, FileText, Clock } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { QRCodeDisplay } from '@/components/qr-code-display';
@@ -17,6 +17,8 @@ import { AlertModal } from '@/components/modal/alert-modal';
 import { deleteEquipmentAction } from '@/actions/equipment';
 import { Separator } from '@/components/ui/separator';
 import { formatUseType, formatFuelType, formatDate } from '@/lib/format';
+import { getStatusBadgeVariant, getStatusLabel, getStatusDescription } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface EquipmentCardProps {
   equipment: Equipment;
@@ -49,6 +51,19 @@ export function EquipmentCard({ equipment, isSelected, onSelectionChange }: Equi
     }
   };
 
+  const getStatusIcon = () => {
+    switch (equipment.status) {
+      case 'active':
+        return <CheckCircle2 className="w-3 h-3 mr-1" />;
+      case 'renewal':
+        return <Clock className="w-3 h-3 mr-1" />;
+      case 'inactive':
+        return <XCircle className="w-3 h-3 mr-1" />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -61,12 +76,22 @@ export function EquipmentCard({ equipment, isSelected, onSelectionChange }: Equi
             />
             <h3 className="font-medium">{`${equipment.brand} ${equipment.model}`}</h3>
           </div>
-          <Badge
-            variant={equipment.status === 'active' ? 'default' : 'secondary'}
-            className='capitalize'
-          >
-            {equipment.status}
-          </Badge>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Badge
+                  variant={getStatusBadgeVariant(equipment.status)}
+                  className='capitalize cursor-help flex items-center'
+                >
+                  {getStatusIcon()}
+                  {getStatusLabel(equipment.status)}
+                </Badge>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{getStatusDescription(equipment.status)}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
       </CardHeader>
 

@@ -4,6 +4,7 @@ import { searchParamsCache } from '@/lib/searchparams';
 import EquipmentListingWrapper from './equipment-listing-wrapper';
 import { columns } from './equipments-tables/columns';
 import { getEquipments } from '@/data/equipment';
+import { calculateEquipmentStatus } from '@/lib/utils';
 
 type EquipmentListingPage = {};
 
@@ -55,12 +56,12 @@ export default async function EquipmentListingPage({ }: EquipmentListingPage) {
 
     const totalEquipments = data.total_equipments;
     const equipments: Equipment[] = data.equipments.map((equipment: any) => {
-      // Check if the equipment is expired (2 years validity from date acquired)
-      const dateAcquired = new Date(equipment.dateAcquired);
-      const currentDate = new Date();
-      const twoYearsFromAcquisition = new Date(dateAcquired);
-      twoYearsFromAcquisition.setFullYear(dateAcquired.getFullYear() + 2);
-      const isExpired = currentDate > twoYearsFromAcquisition; // Equipment is expired if current date is past 2 years from acquisition
+      // Use centralized status calculation
+      const status = calculateEquipmentStatus(
+        equipment.isNew,
+        equipment.dateAcquired,
+        equipment.createdAt
+      );
 
       // Ensure all dates are in ISO format for consistent handling
       return {
@@ -81,14 +82,14 @@ export default async function EquipmentListingPage({ }: EquipmentListingPage) {
         guidBarLength: equipment.guidBarLength,
         horsePower: equipment.horsePower,
         fuelType: equipment.fuelType,
-        dateAcquired: dateAcquired.toISOString(),
+        dateAcquired: new Date(equipment.dateAcquired).toISOString(),
         stencilOfSerialNo: equipment.stencilOfSerialNo,
         otherInfo: equipment.otherInfo,
         intendedUse: equipment.intendedUse,
         isNew: equipment.isNew,
         createdAt: new Date(equipment.createdAt).toISOString(),
         updatedAt: new Date(equipment.updatedAt).toISOString(),
-        status: isExpired ? 'inactive' : 'active',
+        status,
         // Document Requirements
         registrationApplicationUrl: equipment.registrationApplicationUrl,
         officialReceiptUrl: equipment.officialReceiptUrl,

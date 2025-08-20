@@ -1,14 +1,28 @@
-import { PrismaClient, FuelType, UseType, DocType } from '../lib/generated/prisma'
+import { PrismaClient, FuelType, UseType, ApplicationStatus, InspectionResult } from '../lib/generated/prisma'
 import * as XLSX from 'xlsx'
 
 const prisma = new PrismaClient()
 
 // Helper function to convert Excel date to JavaScript Date
-const excelDateToJSDate = (excelDate: number): Date => {
-  // Excel dates are number of days since 1900-01-01
-  const utcDays = Math.floor(excelDate - 25569)
-  const utcValue = utcDays * 86400
-  return new Date(utcValue * 1000)
+const excelDateToJSDate = (excelDate: number | string): Date | null => {
+  if (!excelDate) return null
+
+  // If it's already a number (Excel date), convert it
+  if (typeof excelDate === 'number') {
+    const utcDays = Math.floor(excelDate - 25569)
+    const utcValue = utcDays * 86400
+    return new Date(utcValue * 1000)
+  }
+
+  // If it's a string, try to parse it as a date
+  if (typeof excelDate === 'string') {
+    const parsedDate = new Date(excelDate)
+    if (!isNaN(parsedDate.getTime())) {
+      return parsedDate
+    }
+  }
+
+  return null
 }
 
 // Helper function to map fuel type
@@ -40,16 +54,36 @@ const mapContactPreference = (preference: string): string => {
   return 'EMAIL' // default
 }
 
+// Helper function to map application status
+const mapApplicationStatus = (status: string): ApplicationStatus | null => {
+  if (!status) return null
+  const statusLower = status.toLowerCase()
+  if (statusLower.includes('accepted')) return 'ACCEPTED'
+  if (statusLower.includes('rejected')) return 'REJECTED'
+  if (statusLower.includes('pending')) return 'PENDING'
+  return null
+}
+
+// Helper function to map inspection result
+const mapInspectionResult = (result: string): InspectionResult | null => {
+  if (!result) return null
+  const resultLower = result.toLowerCase()
+  if (resultLower.includes('passed')) return 'PASSED'
+  if (resultLower.includes('failed')) return 'FAILED'
+  if (resultLower.includes('pending')) return 'PENDING'
+  return null
+}
+
 const seed = async () => {
   try {
     // Clear existing data
     console.log('Clearing existing data...')
-    await prisma.document.deleteMany()
+
     await prisma.equipment.deleteMany()
 
     // Read the Excel file
     console.log('Reading Excel file...')
-    const workbook = XLSX.readFile('documents/Chainsaw-Registration-Alaminos-Responses-25.xlsx')
+    const workbook = XLSX.readFile('documents/chainsaw-registration-alaminos.xlsx')
     const sheetName = workbook.SheetNames[0]
     const worksheet = workbook.Sheets[sheetName]
     const data = XLSX.utils.sheet_to_json(worksheet)
@@ -68,14 +102,16 @@ const seed = async () => {
         }
 
         // Parse dates
-        const dateAcquired = record['Date of Acquisition']
-          ? excelDateToJSDate(record['Date of Acquisition'])
-          : new Date()
+        const dateAcquired = excelDateToJSDate(record['Date of Acquisition']) || new Date()
 
         // Parse timestamp for createdAt
-        const createdAt = record['Timestamp']
-          ? excelDateToJSDate(record['Timestamp'])
-          : new Date()
+        const createdAt = excelDateToJSDate(record['Timestamp']) || new Date()
+
+        // Parse OR date
+        const orDate = excelDateToJSDate(record['OR Date'])
+
+        // Parse expiry date
+        const expiryDate = excelDateToJSDate(record['Expiry Date'])
 
         // Create equipment record
         const equipment = await prisma.equipment.create({
@@ -101,66 +137,41 @@ const seed = async () => {
             stencilOfSerialNo: record['Stencil of Serial No.']?.toString() || '',
             otherInfo: record['Other Info of the Chainsaw (Description, Color, etc.)'] || '',
             intendedUse: mapIntendedUse(record['Intended Use of the Chainsaw'] || ''),
-            isNew: record['New Chainsaw or renewal of registration?']?.toLowerCase().includes('new') || false,
+            isNew: record['New Chainsaw or renewal of registration?']?.toLowerCase().includes('new chainsaw') || false,
             createdAt,
             updatedAt: createdAt,
-            // Document URLs
+
+            // Document Requirements
             registrationApplicationUrl: record['Signed Chainsaw Registration Application'] || null,
             officialReceiptUrl: record['Official Receipt of the Chainsaw'] || null,
+            spaUrl: record['SPA (if the applicant is not the owner of the chainsaw)'] || null,
             stencilSerialNumberPictureUrl: record['Stencil Serial Number of Chainsaw (Picture)'] || null,
             chainsawPictureUrl: record['Picture of the Chainsaw'] || null,
+
+            // Renewal Registration Requirements
+            previousCertificateOfRegistrationNumber: record['Previous Certificate of Registration Number'] || null,
+            renewalRegistrationApplicationUrl: record['Signed Chainsaw Registration Application - Renewal'] || null,
+            renewalPreviousCertificateOfRegistrationUrl: record['Previous Certificate of Registration '] || null,
+
+            // Additional Requirements
+            forestTenureAgreementUrl: record['Forest Tenure Agreement (if Tenural Instrument Holder)'] || null,
+            businessPermitUrl: record['Business Permit (If Business owner)'] || null,
+            certificateOfRegistrationUrl: record['For Private Tree Plantation Owner - Certificate of Registration'] || null,
+            lguBusinessPermitUrl: record['Business Permit from LGU or affidavit that the chainsaw is needed if applicants/profession/work and will be used for legal purpose'] || null,
             woodProcessingPermitUrl: record['For Wood Processor - Wood processing plant permit'] || null,
-            businessPermitUrl: record['Business Permit (If Business owner)'] || record['Business Permit from LGU or affidavit that the chainsaw\nis needed if applicants/profession/work and will be used for legal purpose'] || null,
+            governmentCertificationUrl: record['For government and GOCC - Certification from the Head of Office or his/her authorized representative that chainsaws are owned/possessed by the office and use for legal purposes (specify)'] || null,
 
             // Data Privacy Consent
-            dataPrivacyConsent: record['Data Privacy Act Consent:\n\nIn submitting this form I agree to my details being used for the purposes of Chainsaw Registration. The information will only be accessed by DENR Staff. I understand my data will be held securely and will not be distributed to third parties. ']?.toLowerCase().includes('agree') || false,
+            dataPrivacyConsent: record['Data Privacy Act Consent:']?.toLowerCase().includes('agree') || false,
 
-            // Create documents
-            documents: {
-              create: [
-                // Registration Application
-                ...(record['Signed Chainsaw Registration Application'] ? [{
-                  type: DocType.REGISTRATION_APPLICATION,
-                  fileUrl: record['Signed Chainsaw Registration Application'],
-                  uploadedAt: dateAcquired
-                }] : []),
-
-                // Official Receipt
-                ...(record['Official Receipt of the Chainsaw'] ? [{
-                  type: DocType.OFFICIAL_RECEIPT,
-                  fileUrl: record['Official Receipt of the Chainsaw'],
-                  uploadedAt: dateAcquired
-                }] : []),
-
-                // Serial Number Picture
-                ...(record['Stencil Serial Number of Chainsaw (Picture)'] ? [{
-                  type: DocType.SERIAL_NUMBER_PICTURE,
-                  fileUrl: record['Stencil Serial Number of Chainsaw (Picture)'],
-                  uploadedAt: dateAcquired
-                }] : []),
-
-                // Chainsaw Picture
-                ...(record['Picture of the Chainsaw'] ? [{
-                  type: DocType.CHAINSAW_PICTURE,
-                  fileUrl: record['Picture of the Chainsaw'],
-                  uploadedAt: dateAcquired
-                }] : []),
-
-                // Wood Processing Permit (if applicable)
-                ...(record['For Wood Processor - Wood processing plant permit'] ? [{
-                  type: DocType.WOOD_PROCESSOR_PERMIT,
-                  fileUrl: record['For Wood Processor - Wood processing plant permit'],
-                  uploadedAt: dateAcquired
-                }] : []),
-
-                // Business Permit (if applicable)
-                ...((record['Business Permit (If Business owner)'] || record['Business Permit from LGU or affidavit that the chainsaw\nis needed if applicants/profession/work and will be used for legal purpose']) ? [{
-                  type: DocType.BUSINESS_PERMIT,
-                  fileUrl: record['Business Permit (If Business owner)'] || record['Business Permit from LGU or affidavit that the chainsaw\nis needed if applicants/profession/work and will be used for legal purpose'],
-                  uploadedAt: dateAcquired
-                }] : [])
-              ]
-            }
+            // Application Status and Processing
+            initialApplicationStatus: mapApplicationStatus(record['Initial Application Status']),
+            initialApplicationRemarks: record['Initial Application Remarks'] || null,
+            inspectionResult: mapInspectionResult(record['Inspection Result']),
+            inspectionRemarks: record['Inspection Remarks'] || null,
+            orNumber: record['OR No']?.toString() || null,
+            orDate,
+            expiryDate,
           }
         })
 

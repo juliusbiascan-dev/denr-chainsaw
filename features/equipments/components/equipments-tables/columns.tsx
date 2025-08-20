@@ -6,13 +6,15 @@ import { DataTableColumnHeader } from '@/components/ui/table/data-table-column-h
 import { Equipment, FuelType, UseType } from '@/constants/data';
 import { DEFAULT_FUEL_TYPES, DEFAULT_USE_TYPES } from './options';
 import { Column, ColumnDef } from '@tanstack/react-table';
-import { CheckCircle2, Text, XCircle, Edit, Trash2, Eye } from 'lucide-react';
+import { CheckCircle2, Text, XCircle, Edit, Trash2, Eye, AlertTriangle, Clock } from 'lucide-react';
 import { DynamicCategoryFilter } from '@/components/ui/table/dynamic-category-filter';
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { deleteEquipmentAction } from '@/actions/equipment';
 import { AlertModal } from '@/components/modal/alert-modal';
 import { formatUseType, formatFuelType, formatDate } from '@/lib/format';
+import { getStatusBadgeVariant, getStatusLabel, getStatusDescription } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 // Inline Actions Component
 const InlineActions = ({ equipment }: { equipment: Equipment }) => {
@@ -268,10 +270,37 @@ export const columns: ColumnDef<Equipment>[] = [
     ),
     cell: ({ cell }) => {
       const status = cell.getValue<Equipment['status']>();
+
+      const getStatusIcon = () => {
+        switch (status) {
+          case 'active':
+            return <CheckCircle2 className="w-3 h-3 mr-1" />;
+          case 'renewal':
+            return <Clock className="w-3 h-3 mr-1" />;
+          case 'inactive':
+            return <XCircle className="w-3 h-3 mr-1" />;
+          default:
+            return null;
+        }
+      };
+
       return (
-        <Badge variant={status === 'active' ? 'default' : 'secondary'} className='capitalize'>
-          {status}
-        </Badge>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge
+                variant={getStatusBadgeVariant(status)}
+                className='capitalize cursor-help flex items-center'
+              >
+                {getStatusIcon()}
+                {getStatusLabel(status)}
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>{getStatusDescription(status)}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       );
     }
   },

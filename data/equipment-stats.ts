@@ -43,25 +43,56 @@ export const getEquipmentStats = async () => {
       ? ((equipmentsThisMonth - equipmentsLastMonth) / equipmentsLastMonth) * 100
       : 100;
 
-    // Get expired/expiring equipment counts based on 2-year validity from dateAcquired
+    // Get expired/expiring equipment counts based on 2-year validity
+    // For new equipment: use dateAcquired + 2 years
+    // For renewals: use createdAt + 2 years
     const now = new Date();
     const twoYearsAgo = new Date(now.getTime() - 2 * 365 * 24 * 60 * 60 * 1000);
+
+    // Count expired equipment
     const expiredEquipments = await db.equipment.count({
       where: {
-        dateAcquired: {
-          lt: twoYearsAgo, // Equipment acquired more than 2 years ago
-        },
+        OR: [
+          // New equipment: expired if dateAcquired is more than 2 years ago
+          {
+            isNew: true,
+            dateAcquired: {
+              lt: twoYearsAgo,
+            },
+          },
+          // Renewal equipment: expired if createdAt is more than 2 years ago
+          {
+            isNew: false,
+            createdAt: {
+              lt: twoYearsAgo,
+            },
+          },
+        ],
       },
     });
 
-    // Equipment expiring in next 30 days (acquired between 2 years and 1 year 11 months ago)
+    // Equipment expiring in next 30 days
     const almostTwoYearsAgo = new Date(now.getTime() - (2 * 365 - 30) * 24 * 60 * 60 * 1000);
     const expiringInNext30Days = await db.equipment.count({
       where: {
-        dateAcquired: {
-          gte: twoYearsAgo,
-          lte: almostTwoYearsAgo,
-        },
+        OR: [
+          // New equipment: expiring if dateAcquired is between 2 years and 1 year 11 months ago
+          {
+            isNew: true,
+            dateAcquired: {
+              gte: twoYearsAgo,
+              lte: almostTwoYearsAgo,
+            },
+          },
+          // Renewal equipment: expiring if createdAt is between 2 years and 1 year 11 months ago
+          {
+            isNew: false,
+            createdAt: {
+              gte: twoYearsAgo,
+              lte: almostTwoYearsAgo,
+            },
+          },
+        ],
       },
     });
 

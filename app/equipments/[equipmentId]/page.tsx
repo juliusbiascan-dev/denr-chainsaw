@@ -2,21 +2,24 @@ import { db } from "@/lib/db";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import { Button } from "@/components/ui/button";
 import {
-  CalendarDays,
-  Clock,
-  FileText,
   User,
   MapPin,
   Phone,
   Mail,
-  IdCard,
+  Calendar,
+  FileText,
+  Settings,
+  Ruler,
   Zap,
   Fuel,
-  Ruler,
-  Settings,
-  AlertTriangle
+  AlertTriangle,
+  Download,
+  ExternalLink
 } from "lucide-react";
+import { formatFuelType, formatUseType, formatDate } from "@/lib/format";
+import { calculateEquipmentStatus, getStatusBadgeVariant } from "@/lib/utils";
 import PageContainer from "@/components/layout/page-container";
 
 export const metadata = {
@@ -48,11 +51,22 @@ export default async function Page(props: PageProps) {
     );
   }
 
-  // Calculate validity: 2 years from dateAcquired
-  const validUntil = new Date(data.dateAcquired);
-  validUntil.setFullYear(validUntil.getFullYear() + 2);
+  // Calculate validity based on whether it's new or renewal
+  let validUntil: Date;
+  if (data.isNew) {
+    // For new equipment: use dateAcquired + 2 years
+    validUntil = new Date(data.dateAcquired);
+    validUntil.setFullYear(validUntil.getFullYear() + 2);
+  } else {
+    // For renewal equipment: use createdAt + 2 years
+    validUntil = new Date(data.createdAt);
+    validUntil.setFullYear(validUntil.getFullYear() + 2);
+  }
   const isExpired = validUntil < new Date();
   const daysUntilExpiry = Math.ceil((validUntil.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+
+  // Use centralized status calculation
+  const status = calculateEquipmentStatus(data.isNew, data.dateAcquired, data.createdAt);
 
   const getStatusBadge = () => {
     if (isExpired) {
@@ -175,10 +189,14 @@ export default async function Page(props: PageProps) {
                   {/* Validity Information */}
                   <div className="bg-gradient-to-r from-primary/5 to-primary/10 p-4 rounded-lg border border-primary/20">
                     <div className="flex items-center gap-2 mb-2">
-                      <CalendarDays className="w-4 h-4 text-primary" />
+                      <Calendar className="w-4 h-4 text-primary" />
                       <span className="font-semibold text-primary">Validity Information</span>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-muted-foreground">Registration Type:</span>
+                        <span className="ml-2 font-medium">{data.isNew ? "New Equipment" : "Renewal Registration"}</span>
+                      </div>
                       <div>
                         <span className="text-muted-foreground">Valid Until:</span>
                         <span className="ml-2 font-medium">{validUntil.toLocaleDateString()}</span>
@@ -189,6 +207,14 @@ export default async function Page(props: PageProps) {
                           {isExpired
                             ? `Expired ${Math.abs(daysUntilExpiry)} days ago`
                             : `${daysUntilExpiry} days remaining`}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-muted-foreground">Validity Period:</span>
+                        <span className="ml-2 font-medium">
+                          {data.isNew
+                            ? "2 years from date acquired"
+                            : "2 years from registration date"}
                         </span>
                       </div>
                     </div>
@@ -257,7 +283,7 @@ export default async function Page(props: PageProps) {
                   {data.ownerIdUrl && (
                     <div className="space-y-2">
                       <label className="text-sm text-muted-foreground flex items-center gap-2">
-                        <IdCard className="w-4 h-4" />
+                        <ExternalLink className="w-4 h-4" />
                         ID Document
                       </label>
                       <a
@@ -277,7 +303,7 @@ export default async function Page(props: PageProps) {
               <Card className="shadow-sm border-0 bg-card/50 backdrop-blur-sm">
                 <CardHeader className="pb-4">
                   <CardTitle className="text-lg font-bold text-primary flex items-center gap-2">
-                    <Clock className="w-5 h-5" />
+                    <Calendar className="w-5 h-5" />
                     Record Information
                   </CardTitle>
                 </CardHeader>

@@ -278,6 +278,11 @@ export const createEquipment = async (data: {
   stencilSerialNumberPictureUrl?: string;
   chainsawPictureUrl?: string;
 
+  // Renewal Registration Requirements
+  previousCertificateOfRegistrationNumber?: string;
+  renewalRegistrationApplicationUrl?: string;
+  renewalPreviousCertificateOfRegistrationUrl?: string;
+
   // Additional Requirements
   forestTenureAgreementUrl?: string;
   businessPermitUrl?: string;
@@ -288,6 +293,15 @@ export const createEquipment = async (data: {
 
   // Data Privacy Consent
   dataPrivacyConsent: boolean;
+
+  // Application Status and Processing
+  initialApplicationStatus?: "ACCEPTED" | "REJECTED" | "PENDING";
+  initialApplicationRemarks?: string;
+  inspectionResult?: "PASSED" | "FAILED" | "PENDING";
+  inspectionRemarks?: string;
+  orNumber?: string;
+  orDate?: Date;
+  expiryDate?: Date;
 }) => {
   try {
     // Validate required fields
@@ -332,6 +346,11 @@ export const createEquipment = async (data: {
         stencilSerialNumberPictureUrl: data.stencilSerialNumberPictureUrl?.trim() || '',
         chainsawPictureUrl: data.chainsawPictureUrl?.trim() || '',
 
+        // Renewal Registration Requirements
+        previousCertificateOfRegistrationNumber: data.previousCertificateOfRegistrationNumber?.trim() || '',
+        renewalRegistrationApplicationUrl: data.renewalRegistrationApplicationUrl?.trim() || '',
+        renewalPreviousCertificateOfRegistrationUrl: data.renewalPreviousCertificateOfRegistrationUrl?.trim() || '',
+
         // Additional Requirements
         forestTenureAgreementUrl: data.forestTenureAgreementUrl?.trim() || '',
         businessPermitUrl: data.businessPermitUrl?.trim() || '',
@@ -341,7 +360,16 @@ export const createEquipment = async (data: {
         governmentCertificationUrl: data.governmentCertificationUrl?.trim() || '',
 
         // Data Privacy Consent
-        dataPrivacyConsent: data.dataPrivacyConsent
+        dataPrivacyConsent: data.dataPrivacyConsent,
+
+        // Application Status and Processing
+        initialApplicationStatus: data.initialApplicationStatus || null,
+        initialApplicationRemarks: data.initialApplicationRemarks?.trim() || '',
+        inspectionResult: data.inspectionResult || null,
+        inspectionRemarks: data.inspectionRemarks?.trim() || '',
+        orNumber: data.orNumber?.trim() || '',
+        orDate: data.orDate || null,
+        expiryDate: data.expiryDate || null
       }
     });
 
@@ -394,6 +422,11 @@ export const updateEquipment = async (id: string, data: {
   stencilSerialNumberPictureUrl?: string;
   chainsawPictureUrl?: string;
 
+  // Renewal Registration Requirements
+  previousCertificateOfRegistrationNumber?: string;
+  renewalRegistrationApplicationUrl?: string;
+  renewalPreviousCertificateOfRegistrationUrl?: string;
+
   // Additional Requirements
   forestTenureAgreementUrl?: string;
   businessPermitUrl?: string;
@@ -404,6 +437,15 @@ export const updateEquipment = async (id: string, data: {
 
   // Data Privacy Consent
   dataPrivacyConsent?: boolean;
+
+  // Application Status and Processing
+  initialApplicationStatus?: "ACCEPTED" | "REJECTED" | "PENDING";
+  initialApplicationRemarks?: string;
+  inspectionResult?: "PASSED" | "FAILED" | "PENDING";
+  inspectionRemarks?: string;
+  orNumber?: string;
+  orDate?: Date;
+  expiryDate?: Date;
 }) => {
   try {
     // Validate that equipment exists
@@ -452,6 +494,11 @@ export const updateEquipment = async (id: string, data: {
     if (data.stencilSerialNumberPictureUrl !== undefined) updateData.stencilSerialNumberPictureUrl = data.stencilSerialNumberPictureUrl.trim();
     if (data.chainsawPictureUrl !== undefined) updateData.chainsawPictureUrl = data.chainsawPictureUrl.trim();
 
+    // Renewal Registration Requirements
+    if (data.previousCertificateOfRegistrationNumber !== undefined) updateData.previousCertificateOfRegistrationNumber = data.previousCertificateOfRegistrationNumber?.trim();
+    if (data.renewalRegistrationApplicationUrl !== undefined) updateData.renewalRegistrationApplicationUrl = data.renewalRegistrationApplicationUrl?.trim();
+    if (data.renewalPreviousCertificateOfRegistrationUrl !== undefined) updateData.renewalPreviousCertificateOfRegistrationUrl = data.renewalPreviousCertificateOfRegistrationUrl?.trim();
+
     // Additional Requirements
     if (data.forestTenureAgreementUrl !== undefined) updateData.forestTenureAgreementUrl = data.forestTenureAgreementUrl.trim();
     if (data.businessPermitUrl !== undefined) updateData.businessPermitUrl = data.businessPermitUrl.trim();
@@ -462,6 +509,15 @@ export const updateEquipment = async (id: string, data: {
 
     // Data Privacy Consent
     if (data.dataPrivacyConsent !== undefined) updateData.dataPrivacyConsent = data.dataPrivacyConsent;
+
+    // Application Status and Processing
+    if (data.initialApplicationStatus !== undefined) updateData.initialApplicationStatus = data.initialApplicationStatus;
+    if (data.initialApplicationRemarks !== undefined) updateData.initialApplicationRemarks = data.initialApplicationRemarks.trim();
+    if (data.inspectionResult !== undefined) updateData.inspectionResult = data.inspectionResult;
+    if (data.inspectionRemarks !== undefined) updateData.inspectionRemarks = data.inspectionRemarks.trim();
+    if (data.orNumber !== undefined) updateData.orNumber = data.orNumber.trim();
+    if (data.orDate !== undefined) updateData.orDate = data.orDate;
+    if (data.expiryDate !== undefined) updateData.expiryDate = data.expiryDate;
 
     // Update the equipment
     const updatedEquipment = await db.equipment.update({

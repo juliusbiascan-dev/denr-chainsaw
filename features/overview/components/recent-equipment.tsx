@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { db } from '@/lib/db';
 import { Equipment } from '@/constants/data';
 import { formatFuelType, formatDate } from '@/lib/format';
+import { calculateEquipmentStatus } from '@/lib/utils';
 
 // Function to get recent equipment from database
 async function getRecentEquipments(): Promise<Equipment[]> {
@@ -23,12 +24,12 @@ async function getRecentEquipments(): Promise<Equipment[]> {
 
     // Transform database equipment to match the Equipment type
     return equipments.map((equipment) => {
-      // Check if the equipment is expired (2 years validity from date acquired)
-      const dateAcquired = new Date(equipment.dateAcquired);
-      const currentDate = new Date();
-      const twoYearsFromAcquisition = new Date(dateAcquired);
-      twoYearsFromAcquisition.setFullYear(dateAcquired.getFullYear() + 2);
-      const isExpired = currentDate > twoYearsFromAcquisition;
+      // Use centralized status calculation
+      const status = calculateEquipmentStatus(
+        equipment.isNew,
+        equipment.dateAcquired,
+        equipment.createdAt
+      );
 
       return {
         id: equipment.id,
@@ -48,14 +49,14 @@ async function getRecentEquipments(): Promise<Equipment[]> {
         guidBarLength: equipment.guidBarLength || undefined,
         horsePower: equipment.horsePower || undefined,
         fuelType: equipment.fuelType,
-        dateAcquired: dateAcquired.toISOString(),
+        dateAcquired: new Date(equipment.dateAcquired).toISOString(),
         stencilOfSerialNo: equipment.stencilOfSerialNo,
         otherInfo: equipment.otherInfo,
         intendedUse: equipment.intendedUse,
         isNew: equipment.isNew,
         createdAt: new Date(equipment.createdAt).toISOString(),
         updatedAt: new Date(equipment.updatedAt).toISOString(),
-        status: isExpired ? 'inactive' : 'active',
+        status,
         // Document Requirements
         registrationApplicationUrl: equipment.registrationApplicationUrl || undefined,
         officialReceiptUrl: equipment.officialReceiptUrl || undefined,
@@ -80,10 +81,20 @@ async function getRecentEquipments(): Promise<Equipment[]> {
 }
 
 // Function to check if equipment is expiring soon
-function isExpiringSoon(dateAcquired: string): boolean {
+function isExpiringSoon(dateAcquired: string, isNew: boolean, createdAt: string): boolean {
   const now = new Date();
-  const acquiredDate = new Date(dateAcquired);
-  const validUntil = new Date(acquiredDate.getTime() + 2 * 365 * 24 * 60 * 60 * 1000);
+  let validUntil: Date;
+
+  if (isNew) {
+    // For new equipment: use dateAcquired + 2 years
+    const acquiredDate = new Date(dateAcquired);
+    validUntil = new Date(acquiredDate.getTime() + 2 * 365 * 24 * 60 * 60 * 1000);
+  } else {
+    // For renewal equipment: use createdAt + 2 years
+    const createdDate = new Date(createdAt);
+    validUntil = new Date(createdDate.getTime() + 2 * 365 * 24 * 60 * 60 * 1000);
+  }
+
   const thirtyDaysFromNow = new Date();
   thirtyDaysFromNow.setDate(now.getDate() + 30);
 
@@ -91,16 +102,33 @@ function isExpiringSoon(dateAcquired: string): boolean {
 }
 
 // Function to check if equipment is expired
-function isExpired(dateAcquired: string): boolean {
-  const acquiredDate = new Date(dateAcquired);
-  const validUntil = new Date(acquiredDate.getTime() + 2 * 365 * 24 * 60 * 60 * 1000);
+function isExpired(dateAcquired: string, isNew: boolean, createdAt: string): boolean {
+  let validUntil: Date;
+
+  if (isNew) {
+    // For new equipment: use dateAcquired + 2 years
+    const acquiredDate = new Date(dateAcquired);
+    validUntil = new Date(acquiredDate.getTime() + 2 * 365 * 24 * 60 * 60 * 1000);
+  } else {
+    // For renewal equipment: use createdAt + 2 years
+    const createdDate = new Date(createdAt);
+    validUntil = new Date(createdDate.getTime() + 2 * 365 * 24 * 60 * 60 * 1000);
+  }
+
   return validUntil < new Date();
 }
 
 // Function to get valid until date
-function getValidUntilDate(dateAcquired: string): Date {
-  const acquiredDate = new Date(dateAcquired);
-  return new Date(acquiredDate.getTime() + 2 * 365 * 24 * 60 * 60 * 1000);
+function getValidUntilDate(dateAcquired: string, isNew: boolean, createdAt: string): Date {
+  if (isNew) {
+    // For new equipment: use dateAcquired + 2 years
+    const acquiredDate = new Date(dateAcquired);
+    return new Date(acquiredDate.getTime() + 2 * 365 * 24 * 60 * 60 * 1000);
+  } else {
+    // For renewal equipment: use createdAt + 2 years
+    const createdDate = new Date(createdAt);
+    return new Date(createdDate.getTime() + 2 * 365 * 24 * 60 * 60 * 1000);
+  }
 }
 
 // Function to format owner's full name
@@ -114,61 +142,77 @@ export async function RecentEquipment() {
 
   return (
     <Card className="h-full">
-      <CardHeader>
-        <CardTitle>Recent Equipment</CardTitle>
-        <CardDescription>
+      <CardHeader >
+        <CardTitle className="text-lg">Recent Equipment</CardTitle>
+        <CardDescription className="text-sm">
           {recentEquipments.length > 0
             ? `${recentEquipments.length} equipment items added recently.`
             : 'No equipment found.'}
         </CardDescription>
       </CardHeader>
-      <CardContent>
-        <div className="space-y-8">
+      <CardContent className="pt-0">
+        <div className="space-y-3">
           {recentEquipments.map((equipment) => (
             <div
               key={equipment.id}
-              className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-0"
+              className="flex items-center gap-3 p-3 rounded-lg border bg-card/50 hover:bg-card/80 transition-colors"
             >
-              <div className="flex items-center sm:block">
-                <Avatar className="h-9 w-9">
-                  <AvatarFallback className="text-xs font-semibold">
-                    {equipment.model.substring(0, 2).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-              </div>
-              <div className="sm:ml-4 space-y-1 flex-1">
-                <p className="text-sm leading-none font-medium truncate w-[100px] sm:w-auto">{equipment.brand} {equipment.model}</p>
-                <p className="text-muted-foreground text-sm truncate w-[120px] sm:w-auto">SN: {equipment.serialNumber}</p>
-                <p className="text-muted-foreground text-sm truncate w-[150px] sm:w-auto">
-                  Owner: {formatOwnerName(equipment.ownerFirstName, equipment.ownerLastName, equipment.ownerMiddleName)}
-                </p>
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant="outline" className="text-xs">
+              <Avatar className="h-8 w-8 flex-shrink-0">
+                <AvatarFallback className="text-xs font-semibold">
+                  {equipment.model.substring(0, 2).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 mb-1">
+                  <p className="text-sm font-medium truncate">
+                    {equipment.brand} {equipment.model}
+                  </p>
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    {equipment.isNew ? (
+                      <Badge variant="default" className="text-xs px-1.5 py-0.5 bg-green-100 text-green-800 hover:bg-green-100">
+                        New
+                      </Badge>
+                    ) : (
+                      <Badge variant="default" className="text-xs px-1.5 py-0.5 bg-blue-100 text-blue-800 hover:bg-blue-100">
+                        Renewal
+                      </Badge>
+                    )}
+                    {isExpired(equipment.dateAcquired, equipment.isNew, equipment.createdAt) && (
+                      <Badge variant="destructive" className="text-xs px-1.5 py-0.5">
+                        Expired
+                      </Badge>
+                    )}
+                    {isExpiringSoon(equipment.dateAcquired, equipment.isNew, equipment.createdAt) && !isExpired(equipment.dateAcquired, equipment.isNew, equipment.createdAt) && (
+                      <Badge variant="secondary" className="text-xs px-1.5 py-0.5">
+                        Expiring
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                  <span className="truncate">SN: {equipment.serialNumber}</span>
+                  <span className="truncate">
+                    {formatOwnerName(equipment.ownerFirstName, equipment.ownerLastName, equipment.ownerMiddleName)}
+                  </span>
+                  <Badge variant="outline" className="text-xs px-1.5 py-0.5">
                     {formatFuelType(equipment.fuelType)}
                   </Badge>
-                  {isExpired(equipment.dateAcquired) && (
-                    <Badge variant="destructive" className="text-xs">
-                      Expired
-                    </Badge>
-                  )}
-                  {isExpiringSoon(equipment.dateAcquired) && !isExpired(equipment.dateAcquired) && (
-                    <Badge variant="secondary" className="text-xs">
-                      Expiring Soon
-                    </Badge>
-                  )}
                 </div>
-              </div>
-              <div className="sm:ml-auto sm:text-right space-y-1 flex flex-row sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto">
-                <div className="text-xs text-muted-foreground">Valid Until</div>
-                <div className="text-sm font-medium">{formatDate(getValidUntilDate(equipment.dateAcquired))}</div>
-                <div className="text-xs text-muted-foreground mt-2">Created</div>
-                <div className="text-xs font-medium">{formatDate(equipment.createdAt)}</div>
+
+                <div className="flex items-center gap-4 text-xs text-muted-foreground mt-1">
+                  <span>Valid: {formatDate(getValidUntilDate(equipment.dateAcquired, equipment.isNew, equipment.createdAt))}</span>
+                  <span>Created: {formatDate(equipment.createdAt)}</span>
+                </div>
               </div>
             </div>
           ))}
+
           {recentEquipments.length === 0 && (
-            <div className="text-center text-muted-foreground py-4">
-              No equipment found. Add some equipment to see them here.
+            <div className="text-center text-muted-foreground py-8">
+              <p className="text-sm">No equipment found.</p>
+              <p className="text-xs">Add some equipment to see them here.</p>
             </div>
           )}
         </div>

@@ -9,6 +9,9 @@ export const UseType = z.enum([
   "OTHER"
 ]);
 
+export const ApplicationStatus = z.enum(["ACCEPTED", "REJECTED", "PENDING"]);
+export const InspectionResult = z.enum(["PASSED", "FAILED", "PENDING"]);
+
 export const EquipmentSchema = z.object({
   // Owner Information
   ownerFirstName: z.string().min(2, {
@@ -92,6 +95,11 @@ export const EquipmentSchema = z.object({
   stencilSerialNumberPictureUrl: z.string().optional(),
   chainsawPictureUrl: z.string().optional(),
 
+  // Renewal Registration Requirements
+  previousCertificateOfRegistrationNumber: z.string().optional(),
+  renewalRegistrationApplicationUrl: z.string().optional(),
+  renewalPreviousCertificateOfRegistrationUrl: z.string().optional(),
+
   // Additional Requirements
   forestTenureAgreementUrl: z.string().optional(),
   businessPermitUrl: z.string().optional(),
@@ -104,6 +112,21 @@ export const EquipmentSchema = z.object({
   dataPrivacyConsent: z.boolean().refine((val) => val === true, {
     message: "You must agree to the Data Privacy Act consent.",
   }),
+
+  // Application Status and Processing
+  initialApplicationStatus: ApplicationStatus.optional(),
+  initialApplicationRemarks: z.string().max(1000, {
+    message: "Application remarks must not exceed 1000 characters."
+  }).optional(),
+  inspectionResult: InspectionResult.optional(),
+  inspectionRemarks: z.string().max(1000, {
+    message: "Inspection remarks must not exceed 1000 characters."
+  }).optional(),
+  orNumber: z.string().max(50, {
+    message: "OR number must not exceed 50 characters."
+  }).optional(),
+  orDate: z.date().optional(),
+  expiryDate: z.date().optional(),
 });
 
 export const EquipmentUpdateSchema = EquipmentSchema.partial().extend({

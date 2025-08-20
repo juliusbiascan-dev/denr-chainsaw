@@ -100,9 +100,20 @@ export function QRPrintUtils({ equipments, selectedEquipments }: QRPrintUtilsPro
         itemsToPrint = allEquipments.map((equipment: any) => {
           const dateAcquired = new Date(equipment.dateAcquired);
           const currentDate = new Date();
-          const twoYearsFromAcquisition = new Date(dateAcquired);
-          twoYearsFromAcquisition.setFullYear(dateAcquired.getFullYear() + 2);
-          const isExpired = currentDate > twoYearsFromAcquisition;
+          let isExpired = false;
+
+          if (equipment.isNew) {
+            // For new equipment: use dateAcquired + 2 years
+            const twoYearsFromAcquisition = new Date(dateAcquired);
+            twoYearsFromAcquisition.setFullYear(dateAcquired.getFullYear() + 2);
+            isExpired = currentDate > twoYearsFromAcquisition;
+          } else {
+            // For renewal equipment: use createdAt + 2 years
+            const createdAt = new Date(equipment.createdAt);
+            const twoYearsFromRegistration = new Date(createdAt);
+            twoYearsFromRegistration.setFullYear(createdAt.getFullYear() + 2);
+            isExpired = currentDate > twoYearsFromRegistration;
+          }
 
           return {
             id: equipment.id,
@@ -127,7 +138,7 @@ export function QRPrintUtils({ equipments, selectedEquipments }: QRPrintUtilsPro
             isNew: equipment.isNew,
             createdAt: new Date(equipment.createdAt).toISOString(),
             updatedAt: new Date(equipment.updatedAt).toISOString(),
-            status: isExpired ? 'inactive' : 'active',
+            status: isExpired ? (equipment.isNew ? 'inactive' : 'renewal') : 'active',
             registrationApplicationUrl: equipment.registrationApplicationUrl,
             officialReceiptUrl: equipment.officialReceiptUrl,
             spaUrl: equipment.spaUrl,

@@ -4,13 +4,28 @@ import { Equipment } from '@/constants/data';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
-import { User, MapPin, Phone, Mail, Calendar, FileText } from 'lucide-react';
+import { User, MapPin, Phone, Mail, Calendar, FileText, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { getStatusBadgeVariant, getStatusLabel, getStatusDescription } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 interface ExpandableOwnerInfoProps {
   equipment: Equipment;
 }
 
 export function ExpandableOwnerInfo({ equipment }: ExpandableOwnerInfoProps) {
+  const getStatusIcon = () => {
+    switch (equipment.status) {
+      case 'active':
+        return <CheckCircle2 className="w-3 h-3 mr-1" />;
+      case 'renewal':
+        return <Clock className="w-3 h-3 mr-1" />;
+      case 'inactive':
+        return <XCircle className="w-3 h-3 mr-1" />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <Card className="w-full border-l-4 border-l-primary/20 bg-muted/30">
       <CardHeader className="pb-3">
@@ -142,9 +157,19 @@ export function ExpandableOwnerInfo({ equipment }: ExpandableOwnerInfoProps) {
 
           <div className="space-y-2">
             <label className="text-xs text-muted-foreground font-medium">Equipment Status</label>
-            <Badge variant={equipment.status === 'active' ? 'default' : 'destructive'} className="text-xs">
-              {equipment.status}
-            </Badge>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge variant={getStatusBadgeVariant(equipment.status)} className="text-xs cursor-help flex items-center">
+                    {getStatusIcon()}
+                    {getStatusLabel(equipment.status)}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>{getStatusDescription(equipment.status)}</p>
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </div>
         </div>
       </CardContent>

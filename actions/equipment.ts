@@ -42,6 +42,10 @@ export const createEquipmentAction = async (values: z.infer<typeof EquipmentSche
     spaUrl,
     stencilSerialNumberPictureUrl,
     chainsawPictureUrl,
+    // Renewal Registration Requirements
+    previousCertificateOfRegistrationNumber,
+    renewalRegistrationApplicationUrl,
+    renewalPreviousCertificateOfRegistrationUrl,
     // Additional Requirements
     forestTenureAgreementUrl,
     businessPermitUrl,
@@ -50,7 +54,15 @@ export const createEquipmentAction = async (values: z.infer<typeof EquipmentSche
     woodProcessingPermitUrl,
     governmentCertificationUrl,
     // Data Privacy Consent
-    dataPrivacyConsent
+    dataPrivacyConsent,
+    // Application Status and Processing
+    initialApplicationStatus,
+    initialApplicationRemarks,
+    inspectionResult,
+    inspectionRemarks,
+    orNumber,
+    orDate,
+    expiryDate
   } = validatedFields.data;
 
   try {
@@ -82,6 +94,10 @@ export const createEquipmentAction = async (values: z.infer<typeof EquipmentSche
       spaUrl,
       stencilSerialNumberPictureUrl,
       chainsawPictureUrl,
+      // Renewal Registration Requirements
+      previousCertificateOfRegistrationNumber,
+      renewalRegistrationApplicationUrl,
+      renewalPreviousCertificateOfRegistrationUrl,
       // Additional Requirements
       forestTenureAgreementUrl,
       businessPermitUrl,
@@ -90,7 +106,15 @@ export const createEquipmentAction = async (values: z.infer<typeof EquipmentSche
       woodProcessingPermitUrl,
       governmentCertificationUrl,
       // Data Privacy Consent
-      dataPrivacyConsent
+      dataPrivacyConsent,
+      // Application Status and Processing
+      initialApplicationStatus,
+      initialApplicationRemarks,
+      inspectionResult,
+      inspectionRemarks,
+      orNumber,
+      orDate,
+      expiryDate
     });
 
     if (result.success) {
@@ -152,7 +176,15 @@ export const updateEquipmentAction = async (
     woodProcessingPermitUrl,
     governmentCertificationUrl,
     // Data Privacy Consent
-    dataPrivacyConsent
+    dataPrivacyConsent,
+    // Application Status and Processing
+    initialApplicationStatus,
+    initialApplicationRemarks,
+    inspectionResult,
+    inspectionRemarks,
+    orNumber,
+    orDate,
+    expiryDate
   } = validatedFields.data;
 
   try {
@@ -199,7 +231,15 @@ export const updateEquipmentAction = async (
       woodProcessingPermitUrl,
       governmentCertificationUrl,
       // Data Privacy Consent
-      dataPrivacyConsent
+      dataPrivacyConsent,
+      // Application Status and Processing
+      initialApplicationStatus,
+      initialApplicationRemarks,
+      inspectionResult,
+      inspectionRemarks,
+      orNumber,
+      orDate,
+      expiryDate
     });
 
     if (result.success) {
@@ -287,6 +327,10 @@ export const bulkImportEquipmentAction = async (equipmentsData: any[]) => {
           spaUrl,
           stencilSerialNumberPictureUrl,
           chainsawPictureUrl,
+          // Renewal Registration Requirements
+          previousCertificateOfRegistrationNumber,
+          renewalRegistrationApplicationUrl,
+          renewalPreviousCertificateOfRegistrationUrl,
           // Additional Requirements
           forestTenureAgreementUrl,
           businessPermitUrl,
@@ -295,7 +339,15 @@ export const bulkImportEquipmentAction = async (equipmentsData: any[]) => {
           woodProcessingPermitUrl,
           governmentCertificationUrl,
           // Data Privacy Consent
-          dataPrivacyConsent
+          dataPrivacyConsent,
+          // Application Status and Processing
+          initialApplicationStatus,
+          initialApplicationRemarks,
+          inspectionResult,
+          inspectionRemarks,
+          orNumber,
+          orDate,
+          expiryDate
         } = validatedFields.data;
 
         const result = await createEquipment({
@@ -326,6 +378,10 @@ export const bulkImportEquipmentAction = async (equipmentsData: any[]) => {
           spaUrl,
           stencilSerialNumberPictureUrl,
           chainsawPictureUrl,
+          // Renewal Registration Requirements
+          previousCertificateOfRegistrationNumber,
+          renewalRegistrationApplicationUrl,
+          renewalPreviousCertificateOfRegistrationUrl,
           // Additional Requirements
           forestTenureAgreementUrl,
           businessPermitUrl,
@@ -334,7 +390,15 @@ export const bulkImportEquipmentAction = async (equipmentsData: any[]) => {
           woodProcessingPermitUrl,
           governmentCertificationUrl,
           // Data Privacy Consent
-          dataPrivacyConsent
+          dataPrivacyConsent,
+          // Application Status and Processing
+          initialApplicationStatus,
+          initialApplicationRemarks,
+          inspectionResult,
+          inspectionRemarks,
+          orNumber,
+          orDate,
+          expiryDate
         });
 
         if (result.success) {

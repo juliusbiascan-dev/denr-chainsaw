@@ -116,6 +116,11 @@ model Equipment {
   stencilSerialNumberPictureUrl String? // Stencil Serial Number of Chainsaw (Picture)
   chainsawPictureUrl            String? // Picture of the Chainsaw
 
+  // Renewal Registration Requirements
+  previousCertificateOfRegistrationNumber     String? // Previous Certificate of Registration Number (optional)
+  renewalRegistrationApplicationUrl           String? // Signed Chainsaw Registration Application for renewal (optional)
+  renewalPreviousCertificateOfRegistrationUrl String? // Renewal Previous Certificate of Registration (optional)
+
   // Additional Requirements
   forestTenureAgreementUrl     String? // Forest Tenure Agreement (if Tenural Instrument Holder)
   businessPermitUrl            String? // Business Permit (If Business owner)
@@ -127,8 +132,14 @@ model Equipment {
   // Data Privacy Consent
   dataPrivacyConsent Boolean @default(false)
 
-  // Optional: documents/attachments
-  documents Document[]
+  // Application Status and Processing
+  initialApplicationStatus  ApplicationStatus? // Initial Application Status (Accepted/Rejected)
+  initialApplicationRemarks String? // Initial Application Remarks
+  inspectionResult          InspectionResult? // Inspection Result (Passed/Failed)
+  inspectionRemarks         String? // Inspection Remarks
+  orNumber                  String? // OR Number
+  orDate                    DateTime? // OR Date
+  expiryDate                DateTime? // Expiry Date
 }
 
 enum FuelType {
@@ -146,24 +157,14 @@ enum UseType {
   OTHER
 }
 
-model Document {
-  id          String    @id @default(cuid())
-  type        DocType
-  fileUrl     String
-  uploadedAt  DateTime  @default(now())
-  equipmentId String
-  equipment   Equipment @relation(fields: [equipmentId], references: [id])
+enum ApplicationStatus {
+  ACCEPTED
+  REJECTED
+  PENDING
 }
 
-enum DocType {
-  REGISTRATION_APPLICATION
-  OFFICIAL_RECEIPT
-  OWNERSHIP_PROOF
-  SERIAL_NUMBER_PICTURE
-  CHAINSAW_PICTURE
-  BUSINESS_PERMIT
-  FOR_PERMIT
-  BUSINESS_REGISTRATION
-  WOOD_PROCESSOR_PERMIT
-  GOVT_CERTIFICATION
+enum InspectionResult {
+  PASSED
+  FAILED
+  PENDING
 }

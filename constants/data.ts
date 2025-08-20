@@ -29,7 +29,7 @@ export type Equipment = {
   isNew: boolean;
   createdAt: string;
   updatedAt: string;
-  status: 'active' | 'inactive';
+  status: 'active' | 'inactive' | 'renewal';
 
   // Document Requirements
   registrationApplicationUrl?: string;
@@ -37,6 +37,11 @@ export type Equipment = {
   spaUrl?: string;
   stencilSerialNumberPictureUrl?: string;
   chainsawPictureUrl?: string;
+
+  // Renewal Registration Requirements
+  previousCertificateOfRegistrationNumber?: string;
+  renewalRegistrationApplicationUrl?: string;
+  renewalPreviousCertificateOfRegistrationUrl?: string;
 
   // Additional Requirements
   forestTenureAgreementUrl?: string;
@@ -48,6 +53,15 @@ export type Equipment = {
 
   // Data Privacy Consent
   dataPrivacyConsent: boolean;
+
+  // Application Status and Processing
+  initialApplicationStatus?: 'ACCEPTED' | 'REJECTED' | 'PENDING';
+  initialApplicationRemarks?: string;
+  inspectionResult?: 'PASSED' | 'FAILED' | 'PENDING';
+  inspectionRemarks?: string;
+  orNumber?: string;
+  orDate?: string;
+  expiryDate?: string;
 };
 
 //Info: The following data is used for the sidebar navigation and Cmd K bar.

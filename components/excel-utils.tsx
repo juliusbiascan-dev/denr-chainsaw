@@ -64,7 +64,7 @@ export function ExcelUtils({ equipments, selectedEquipments }: ExcelUtilsProps) 
             const row = jsonData[i] as any[];
             if (!row || row.length === 0) continue;
 
-            // Transform data according to schema requirements - aligned with new structure
+            // Transform data according to schema requirements - aligned with chainsaw-registration-alaminos.xlsx format
             const equipmentData = {
               // Auto Number (extract number from CSRALAMINOS format if present)
               autoNumber: (() => {
@@ -78,41 +78,95 @@ export function ExcelUtils({ equipments, selectedEquipments }: ExcelUtilsProps) 
               })(),
 
               // Owner Information
-              ownerFirstName: row[headers.indexOf('First Name')] || row[headers.indexOf('Owner First Name')] || '',
-              ownerLastName: row[headers.indexOf('Last Name')] || row[headers.indexOf('Owner Last Name')] || '',
-              ownerMiddleName: row[headers.indexOf('Middle Initial')] || row[headers.indexOf('Owner Middle Name')] || '',
-              ownerAddress: row[headers.indexOf('Address')] || row[headers.indexOf('Owner Address')] || '',
-              ownerContactNumber: row[headers.indexOf('Contact No')] || row[headers.indexOf('Owner Contact Number')] || '',
-              ownerEmail: row[headers.indexOf('Email Address')] || row[headers.indexOf('Owner Email')] || '',
-              ownerPreferContactMethod: row[headers.indexOf('Preferred Contacting Channel')] || row[headers.indexOf('Owner Preferred Contact Method')] || '',
+              ownerFirstName: row[headers.indexOf('First Name')] || '',
+              ownerLastName: row[headers.indexOf('Last Name')] || '',
+              ownerMiddleName: row[headers.indexOf('Middle Initial')] || '',
+              ownerAddress: row[headers.indexOf('Address')] || '',
+              ownerContactNumber: row[headers.indexOf('Contact No.')] || '',
+              ownerEmail: row[headers.indexOf('Email Address')] || '',
+              ownerPreferContactMethod: row[headers.indexOf('Preferred Contacting Method')] || '',
               ownerIdUrl: '', // Default empty string
 
               // Equipment Information
-              brand: row[headers.indexOf('Chainsaw Brand')] || row[headers.indexOf('Brand')] || '',
-              model: row[headers.indexOf('Chainsaw Model')] || row[headers.indexOf('Model')] || '',
-              serialNumber: row[headers.indexOf('Chainsaw Serial No')] || row[headers.indexOf('Serial Number')] || '',
-              guidBarLength: parseFloat(row[headers.indexOf('Guide Bar Length')] || row[headers.indexOf('Guide Bar Length (inches)')] || '0') || 0,
-              horsePower: parseFloat(row[headers.indexOf('Inch/Horse Power')] || row[headers.indexOf('Horse Power')] || '0') || 0,
-              fuelType: row[headers.indexOf('Fuel')] || row[headers.indexOf('Fuel Type')] || 'GAS',
-              dateAcquired: new Date(row[headers.indexOf('Date of Acquisition')] || row[headers.indexOf('Date Acquired')] || new Date()),
-              stencilOfSerialNo: row[headers.indexOf('Stencil of Serial No')] || row[headers.indexOf('Stencil of Serial Number')] || '',
-              otherInfo: row[headers.indexOf('Other Info of the Chain')] || row[headers.indexOf('Other Information')] || '',
-              intendedUse: row[headers.indexOf('Intended Use of the Chain')] || row[headers.indexOf('Intended Use')] || 'OTHER',
-              isNew: (row[headers.indexOf('New Chainsaw or renewal')] || row[headers.indexOf('Is New Equipment')] || '').toLowerCase().includes('new'),
+              brand: row[headers.indexOf('Chainsaw Brand')] || '',
+              model: row[headers.indexOf('Chainsaw Model')] || '',
+              serialNumber: row[headers.indexOf('Chainsaw Serial No.')] || '',
+              guidBarLength: parseFloat(row[headers.indexOf('Guide Bar Length (inches)')] || '0') || 0,
+              horsePower: parseFloat(row[headers.indexOf('Horse Power')] || '0') || 0,
+              fuelType: row[headers.indexOf('Fuel ')] || 'GAS',
+              dateAcquired: (() => {
+                const dateValue = row[headers.indexOf('Date of Acquisition')];
+                if (dateValue) {
+                  // Handle Excel date serial number
+                  if (typeof dateValue === 'number') {
+                    return new Date((dateValue - 25569) * 86400 * 1000);
+                  }
+                  return new Date(dateValue);
+                }
+                return new Date();
+              })(),
+              stencilOfSerialNo: row[headers.indexOf('Stencil of Serial No.')] || '',
+              otherInfo: row[headers.indexOf('Other Info of the Chainsaw (Description, Color, etc.)')] || '',
+              intendedUse: row[headers.indexOf('Intended Use of the Chainsaw')] || 'OTHER',
+              isNew: (row[headers.indexOf('New Chainsaw or renewal of registration?')] || '').toLowerCase().includes('new'),
 
               // Document Requirements
-              registrationApplicationUrl: row[headers.indexOf('Signed Chainsaw Registration')] || '',
-              officialReceiptUrl: row[headers.indexOf('Application Official Receipt')] || '',
-              spaUrl: row[headers.indexOf('SPA (if the applicant is not the owner)')] || '',
-              stencilSerialNumberPictureUrl: row[headers.indexOf('Stencil Serial Number Picture')] || '',
+              registrationApplicationUrl: row[headers.indexOf('Signed Chainsaw Registration Application')] || '',
+              officialReceiptUrl: row[headers.indexOf('Official Receipt of the Chainsaw')] || '',
+              spaUrl: row[headers.indexOf('SPA (if the applicant is not the owner of the chainsaw)')] || '',
+              stencilSerialNumberPictureUrl: row[headers.indexOf('Stencil Serial Number of Chainsaw (Picture)')] || '',
               chainsawPictureUrl: row[headers.indexOf('Picture of the Chainsaw')] || '',
-              forestTenureAgreementUrl: row[headers.indexOf('Forest Tenure Agreement')] || '',
+              forestTenureAgreementUrl: row[headers.indexOf('Forest Tenure Agreement (if Tenural Instrument Holder)')] || '',
               businessPermitUrl: row[headers.indexOf('Business Permit (If Business owner)')] || '',
-              certificateOfRegistrationUrl: row[headers.indexOf('Certificate of Registration')] || '',
-              lguBusinessPermitUrl: row[headers.indexOf('LGU Business Permit')] || '',
-              woodProcessingPermitUrl: row[headers.indexOf('Wood Processing Permit')] || '',
-              governmentCertificationUrl: row[headers.indexOf('Government Certification')] || '',
-              dataPrivacyConsent: (row[headers.indexOf('Data Privacy Consent')] || '').toLowerCase().includes('yes')
+              certificateOfRegistrationUrl: row[headers.indexOf('For Private Tree Plantation Owner - Certificate of Registration')] || '',
+              lguBusinessPermitUrl: row[headers.indexOf('Business Permit from LGU or affidavit that the chainsaw\r\nis needed if applicants/profession/work and will be used for legal purpose')] || '',
+              woodProcessingPermitUrl: row[headers.indexOf('For Wood Processor - Wood processing plant permit')] || '',
+              governmentCertificationUrl: row[headers.indexOf('For government and GOCC - Certification from the Head of Office or his/her authorized representative that chainsaws are owned/possessed by the office and use for legal purposes (specify)')] || '',
+              dataPrivacyConsent: (row[headers.indexOf('Data Privacy Act Consent:')] || '').toLowerCase().includes('agree'),
+
+              // Renewal Registration Requirements
+              previousCertificateOfRegistrationNumber: row[headers.indexOf('Previous Certificate of Registration Number')] || '',
+              renewalRegistrationApplicationUrl: row[headers.indexOf('Signed Chainsaw Registration Application - Renew Previous Certificate of Registration')] || '',
+              renewalPreviousCertificateOfRegistrationUrl: row[headers.indexOf('Previous Certificate of Registration ')] || '',
+
+              // Application Status and Processing
+              initialApplicationStatus: (() => {
+                const status = row[headers.indexOf('Initial Application Status')] || '';
+                if (status.toLowerCase().includes('accept')) return 'ACCEPTED';
+                if (status.toLowerCase().includes('reject')) return 'REJECTED';
+                if (status.toLowerCase().includes('pending')) return 'PENDING';
+                return null;
+              })(),
+              initialApplicationRemarks: row[headers.indexOf('Initial Application Remarks')] || '',
+              inspectionResult: (() => {
+                const result = row[headers.indexOf('Inspection Result')] || '';
+                if (result.toLowerCase().includes('pass')) return 'PASSED';
+                if (result.toLowerCase().includes('fail')) return 'FAILED';
+                if (result.toLowerCase().includes('pending')) return 'PENDING';
+                return null;
+              })(),
+              inspectionRemarks: row[headers.indexOf('Inspection Remarks')] || '',
+              orNumber: row[headers.indexOf('OR No')] || '',
+              orDate: (() => {
+                const dateValue = row[headers.indexOf('OR Date')];
+                if (dateValue) {
+                  if (typeof dateValue === 'number') {
+                    return new Date((dateValue - 25569) * 86400 * 1000);
+                  }
+                  return new Date(dateValue);
+                }
+                return null;
+              })(),
+              expiryDate: (() => {
+                const dateValue = row[headers.indexOf('Expiry Date')];
+                if (dateValue) {
+                  if (typeof dateValue === 'number') {
+                    return new Date((dateValue - 25569) * 86400 * 1000);
+                  }
+                  return new Date(dateValue);
+                }
+                return null;
+              })()
             };
 
             importedEquipments.push(equipmentData);
@@ -188,9 +242,20 @@ export function ExcelUtils({ equipments, selectedEquipments }: ExcelUtilsProps) 
         itemsToExport = allEquipments.map((equipment: any) => {
           const dateAcquired = new Date(equipment.dateAcquired);
           const currentDate = new Date();
-          const twoYearsFromAcquisition = new Date(dateAcquired);
-          twoYearsFromAcquisition.setFullYear(dateAcquired.getFullYear() + 2);
-          const isExpired = currentDate > twoYearsFromAcquisition;
+          let isExpired = false;
+
+          if (equipment.isNew) {
+            // For new equipment: use dateAcquired + 2 years
+            const twoYearsFromAcquisition = new Date(dateAcquired);
+            twoYearsFromAcquisition.setFullYear(dateAcquired.getFullYear() + 2);
+            isExpired = currentDate > twoYearsFromAcquisition;
+          } else {
+            // For renewal equipment: use createdAt + 2 years
+            const createdAt = new Date(equipment.createdAt);
+            const twoYearsFromRegistration = new Date(createdAt);
+            twoYearsFromRegistration.setFullYear(createdAt.getFullYear() + 2);
+            isExpired = currentDate > twoYearsFromRegistration;
+          }
 
           return {
             id: equipment.id,
@@ -215,7 +280,7 @@ export function ExcelUtils({ equipments, selectedEquipments }: ExcelUtilsProps) 
             isNew: equipment.isNew,
             createdAt: new Date(equipment.createdAt).toISOString(),
             updatedAt: new Date(equipment.updatedAt).toISOString(),
-            status: isExpired ? 'inactive' : 'active',
+            status: isExpired ? (equipment.isNew ? 'inactive' : 'renewal') : 'active',
             registrationApplicationUrl: equipment.registrationApplicationUrl,
             officialReceiptUrl: equipment.officialReceiptUrl,
             spaUrl: equipment.spaUrl,
@@ -227,85 +292,119 @@ export function ExcelUtils({ equipments, selectedEquipments }: ExcelUtilsProps) 
             lguBusinessPermitUrl: equipment.lguBusinessPermitUrl,
             woodProcessingPermitUrl: equipment.woodProcessingPermitUrl,
             governmentCertificationUrl: equipment.governmentCertificationUrl,
-            dataPrivacyConsent: equipment.dataPrivacyConsent
+            dataPrivacyConsent: equipment.dataPrivacyConsent,
+
+            // Renewal Registration Requirements
+            previousCertificateOfRegistrationNumber: equipment.previousCertificateOfRegistrationNumber,
+            renewalRegistrationApplicationUrl: equipment.renewalRegistrationApplicationUrl,
+            renewalPreviousCertificateOfRegistrationUrl: equipment.renewalPreviousCertificateOfRegistrationUrl,
+
+            // Application Status and Processing
+            initialApplicationStatus: equipment.initialApplicationStatus,
+            initialApplicationRemarks: equipment.initialApplicationRemarks,
+            inspectionResult: equipment.inspectionResult,
+            inspectionRemarks: equipment.inspectionRemarks,
+            orNumber: equipment.orNumber,
+            orDate: equipment.orDate,
+            expiryDate: equipment.expiryDate
           };
         });
       }
 
-      // Prepare data for export - aligned with schema and expected format
+      // Prepare data for export - aligned with chainsaw-registration-alaminos.xlsx format
       const exportData = itemsToExport.map((equipment, index) => ({
-        'Auto Number': `CSRALAMINOS${String(index + 1).padStart(4, '0')}`,
+        'Auto Number': `CSRALAMINOS${String((index + 1000)).padStart(4, '0')}`,
         'Timestamp': equipment.createdAt,
         'First Name': equipment.ownerFirstName,
         'Middle Initial': equipment.ownerMiddleName,
         'Last Name': equipment.ownerLastName,
         'Address': equipment.ownerAddress,
-        'Contact No': equipment.ownerContactNumber || '',
+        'Contact No.': equipment.ownerContactNumber || '',
         'Email Address': equipment.ownerEmail || '',
-        'Preferred Contacting Channel': equipment.ownerPreferContactMethod || '',
+        'Preferred Contacting Method': equipment.ownerPreferContactMethod || '',
         'Chainsaw Brand': equipment.brand,
         'Chainsaw Model': equipment.model,
-        'Chainsaw Serial No': equipment.serialNumber,
-        'Guide Bar Length': equipment.guidBarLength || '',
-        'Inch/Horse Power': equipment.horsePower || '',
-        'Fuel': equipment.fuelType,
+        'Chainsaw Serial No.': equipment.serialNumber,
+        'Guide Bar Length (inches)': equipment.guidBarLength || '',
+        'Horse Power': equipment.horsePower || '',
+        'Fuel ': equipment.fuelType,
         'Date of Acquisition': equipment.dateAcquired,
-        'Stencil of Serial No': equipment.stencilOfSerialNo,
-        'Other Info of the Chain': equipment.otherInfo,
-        'Intended Use of the Chain': equipment.intendedUse,
-        'New Chainsaw or renewal': equipment.isNew ? 'New' : 'Renewal',
-        'Signed Chainsaw Registration': equipment.registrationApplicationUrl || '',
-        'Application Official Receipt': equipment.officialReceiptUrl || '',
-        'SPA (if the applicant is not the owner)': equipment.spaUrl || '',
-        'Stencil Serial Number Picture': equipment.stencilSerialNumberPictureUrl || '',
+        'Stencil of Serial No.': equipment.stencilOfSerialNo,
+        'Other Info of the Chainsaw (Description, Color, etc.)': equipment.otherInfo,
+        'Intended Use of the Chainsaw': equipment.intendedUse,
+        'New Chainsaw or renewal of registration?': equipment.isNew ? 'New Chainsaw' : 'Renewal of Registration',
+        'Previous Certificate of Registration Number': equipment.previousCertificateOfRegistrationNumber || '',
+        'Signed Chainsaw Registration Application - Renew Previous Certificate of Registration': equipment.renewalRegistrationApplicationUrl || '',
+        'Previous Certificate of Registration ': equipment.renewalPreviousCertificateOfRegistrationUrl || '',
+        'Initial Application Status': equipment.initialApplicationStatus || '',
+        'Initial Application Remarks': equipment.initialApplicationRemarks || '',
+        'Inspection Result': equipment.inspectionResult || '',
+        'Inspection Remarks': equipment.inspectionRemarks || '',
+        'OR No': equipment.orNumber || '',
+        'OR Date': equipment.orDate ? new Date(equipment.orDate).toISOString() : '',
+        'Expiry Date': equipment.expiryDate ? new Date(equipment.expiryDate).toISOString() : '',
+        'Signed Chainsaw Registration Application': equipment.registrationApplicationUrl || '',
+        'Official Receipt of the Chainsaw': equipment.officialReceiptUrl || '',
+        'SPA (if the applicant is not the owner of the chainsaw)': equipment.spaUrl || '',
+        'Stencil Serial Number of Chainsaw (Picture)': equipment.stencilSerialNumberPictureUrl || '',
         'Picture of the Chainsaw': equipment.chainsawPictureUrl || '',
-        'Forest Tenure Agreement': equipment.forestTenureAgreementUrl || '',
+        'Forest Tenure Agreement (if Tenural Instrument Holder)': equipment.forestTenureAgreementUrl || '',
         'Business Permit (If Business owner)': equipment.businessPermitUrl || '',
-        'Certificate of Registration': equipment.certificateOfRegistrationUrl || '',
-        'LGU Business Permit': equipment.lguBusinessPermitUrl || '',
-        'Wood Processing Permit': equipment.woodProcessingPermitUrl || '',
-        'Government Certification': equipment.governmentCertificationUrl || '',
-        'Data Privacy Consent': equipment.dataPrivacyConsent ? 'Yes' : 'No',
+        'For Private Tree Plantation Owner - Certificate of Registration': equipment.certificateOfRegistrationUrl || '',
+        'Business Permit from LGU or affidavit that the chainsaw\r\nis needed if applicants/profession/work and will be used for legal purpose': equipment.lguBusinessPermitUrl || '',
+        'For Wood Processor - Wood processing plant permit': equipment.woodProcessingPermitUrl || '',
+        'For government and GOCC - Certification from the Head of Office or his/her authorized representative that chainsaws are owned/possessed by the office and use for legal purposes (specify)': equipment.governmentCertificationUrl || '',
+        'Data Privacy Act Consent:': equipment.dataPrivacyConsent ? 'Agree' : 'Disagree',
       }));
 
       // Create workbook and worksheet
       const workbook = XLSX.utils.book_new();
       const worksheet = XLSX.utils.json_to_sheet(exportData);
 
-      // Set column widths for better readability - aligned with new structure
+      // Set column widths for better readability - aligned with chainsaw-registration-alaminos.xlsx format
       const columnWidths = [
-        { wch: 12 }, // Auto Number
+        { wch: 15 }, // Auto Number
         { wch: 20 }, // Timestamp
         { wch: 15 }, // First Name
         { wch: 15 }, // Middle Initial
         { wch: 15 }, // Last Name
         { wch: 40 }, // Address
-        { wch: 15 }, // Contact No
+        { wch: 15 }, // Contact No.
         { wch: 30 }, // Email Address
-        { wch: 25 }, // Preferred Contacting Channel
+        { wch: 30 }, // Preferred Contacting Method
         { wch: 20 }, // Chainsaw Brand
         { wch: 20 }, // Chainsaw Model
-        { wch: 20 }, // Chainsaw Serial No
-        { wch: 18 }, // Guide Bar Length
-        { wch: 18 }, // Inch/Horse Power
+        { wch: 20 }, // Chainsaw Serial No.
+        { wch: 25 }, // Guide Bar Length (inches)
+        { wch: 15 }, // Horse Power
         { wch: 12 }, // Fuel
         { wch: 20 }, // Date of Acquisition
-        { wch: 25 }, // Stencil of Serial No
-        { wch: 35 }, // Other Info of the Chain
-        { wch: 25 }, // Intended Use of the Chain
-        { wch: 20 }, // New Chainsaw or renewal
-        { wch: 30 }, // Signed Chainsaw Registration
-        { wch: 30 }, // Application Official Receipt
-        { wch: 35 }, // SPA (if the applicant is not the owner)
-        { wch: 30 }, // Stencil Serial Number Picture
+        { wch: 25 }, // Stencil of Serial No.
+        { wch: 40 }, // Other Info of the Chainsaw (Description, Color, etc.)
+        { wch: 30 }, // Intended Use of the Chainsaw
+        { wch: 35 }, // New Chainsaw or renewal of registration?
+        { wch: 35 }, // Previous Certificate of Registration Number
+        { wch: 40 }, // Signed Chainsaw Registration Application - Renewal
+        { wch: 35 }, // Previous Certificate of Registration
+        { wch: 25 }, // Initial Application Status
+        { wch: 25 }, // Initial Application Remarks
+        { wch: 20 }, // Inspection Result
+        { wch: 25 }, // Inspection Remarks
+        { wch: 15 }, // OR No
+        { wch: 15 }, // OR Date
+        { wch: 15 }, // Expiry Date
+        { wch: 40 }, // Signed Chainsaw Registration Application
+        { wch: 35 }, // Official Receipt of the Chainsaw
+        { wch: 45 }, // SPA (if the applicant is not the owner of the chainsaw)
+        { wch: 40 }, // Stencil Serial Number of Chainsaw (Picture)
         { wch: 25 }, // Picture of the Chainsaw
-        { wch: 25 }, // Forest Tenure Agreement
-        { wch: 30 }, // Business Permit (If Business owner)
-        { wch: 30 }, // Certificate of Registration
-        { wch: 25 }, // LGU Business Permit
-        { wch: 25 }, // Wood Processing Permit
-        { wch: 25 }, // Government Certification
-        { wch: 20 }, // Data Privacy Consent
+        { wch: 45 }, // Forest Tenure Agreement (if Tenural Instrument Holder)
+        { wch: 35 }, // Business Permit (If Business owner)
+        { wch: 50 }, // For Private Tree Plantation Owner - Certificate of Registration
+        { wch: 60 }, // Business Permit from LGU or affidavit...
+        { wch: 40 }, // For Wood Processor - Wood processing plant permit
+        { wch: 70 }, // For government and GOCC - Certification...
+        { wch: 25 }, // Data Privacy Act Consent:
       ];
       worksheet['!cols'] = columnWidths;
 
@@ -314,7 +413,7 @@ export function ExcelUtils({ equipments, selectedEquipments }: ExcelUtilsProps) 
 
       // Generate filename with timestamp
       const timestamp = new Date().toISOString().split('T')[0];
-      const filename = `equipment-data-${timestamp}.xlsx`;
+      const filename = `chainsaw-registration-alaminos-${timestamp}.xlsx`;
 
       // Save the file
       XLSX.writeFile(workbook, filename);

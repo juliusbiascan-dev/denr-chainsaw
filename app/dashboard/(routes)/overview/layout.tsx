@@ -32,6 +32,8 @@ export default async function OverViewLayout({
     : `${stats.monthlyGrowthRate.toFixed(1)}%`;
 
   // Calculate active equipment (not expired based on 2 year validity)
+  // For new equipment: use dateAcquired + 2 years
+  // For renewals: use createdAt + 2 years
   const activeEquipments = stats.totalEquipments - stats.expiredEquipments;
 
   return (
@@ -107,7 +109,7 @@ export default async function OverViewLayout({
                 Chainsaws with valid permits <IconTrendingUp className='size-4' />
               </div>
               <div className='text-muted-foreground'>
-                Non-expired registrations
+                Non-expired registrations (new: 2y from acquisition, renewal: 2y from registration)
               </div>
             </CardFooter>
           </Card>
@@ -130,7 +132,7 @@ export default async function OverViewLayout({
                 {stats.expiringInNext30Days > 0 ? <IconAlertTriangle className='size-4' /> : <IconTrendingUp className='size-4' />}
               </div>
               <div className='text-muted-foreground'>
-                Permits expiring in next 30 days
+                Permits expiring in next 30 days (new: 2y from acquisition, renewal: 2y from registration)
               </div>
             </CardFooter>
           </Card>
