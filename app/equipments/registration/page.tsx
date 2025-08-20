@@ -104,7 +104,7 @@ const RegistrationPage = () => {
 
             {/* Footer */}
             <div className="text-center mt-6 sm:mt-8 text-xs sm:text-sm text-muted-foreground">
-              <p>© 2024 DENR Region XI. All rights reserved.</p>
+              <p>© 2025 CENRO ALAMINOS. All rights reserved.</p>
               <p className="mt-1">This system complies with Republic Act No. 10173 (Data Privacy Act of 2012)</p>
             </div>
           </div>
