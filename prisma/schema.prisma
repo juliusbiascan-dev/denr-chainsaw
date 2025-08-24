@@ -83,6 +83,15 @@ model TwoFactorConfirmation {
   @@unique([userId])
 }
 
+model EquipmentVerificationToken {
+  id      String   @id @default(cuid())
+  email   String
+  token   String   @unique
+  expires DateTime
+
+  @@unique([email, token])
+}
+
 model Equipment {
   id                       String  @id @default(cuid())
   ownerFirstName           String //Owner's First Name
@@ -131,6 +140,9 @@ model Equipment {
 
   // Data Privacy Consent
   dataPrivacyConsent Boolean @default(false)
+
+  // Email Verification
+  emailVerified Boolean @default(false)
 
   // Application Status and Processing
   initialApplicationStatus  ApplicationStatus? // Initial Application Status (Accepted/Rejected)

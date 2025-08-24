@@ -19,6 +19,8 @@ export async function EquipmentAreaGraphContainer() {
         createdAt: {
           gte: sixMonthsAgo,
         },
+        initialApplicationStatus: 'ACCEPTED',
+        inspectionResult: 'PASSED'
       },
       select: {
         dateAcquired: true,

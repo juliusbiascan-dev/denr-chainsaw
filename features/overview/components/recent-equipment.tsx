@@ -16,6 +16,10 @@ import { calculateEquipmentStatus } from '@/lib/utils';
 async function getRecentEquipments(): Promise<Equipment[]> {
   try {
     const equipments = await db.equipment.findMany({
+      where: {
+        initialApplicationStatus: 'ACCEPTED',
+        inspectionResult: 'PASSED'
+      },
       take: 5,
       orderBy: {
         createdAt: 'desc'

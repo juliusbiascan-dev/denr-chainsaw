@@ -5,6 +5,8 @@ import { revalidatePath } from "next/cache";
 
 import { EquipmentSchema } from "@/schemas/equipment";
 import { createEquipment, updateEquipment, deleteEquipment, getEquipmentById } from "@/data/equipment";
+import { sendRegistrationConfirmationEmail, sendApplicationAcceptedEmail, sendInspectionPassedEmail, sendEquipmentVerificationEmail } from "@/lib/mail";
+import { generateEquipmentVerificationToken } from '@/lib/tokens';
 
 export const createEquipmentAction = async (values: z.infer<typeof EquipmentSchema>) => {
   // Validate input
@@ -106,7 +108,7 @@ export const createEquipmentAction = async (values: z.infer<typeof EquipmentSche
       woodProcessingPermitUrl,
       governmentCertificationUrl,
       // Data Privacy Consent
-      dataPrivacyConsent,
+      dataPrivacyConsent: dataPrivacyConsent ?? false,
       // Application Status and Processing
       initialApplicationStatus,
       initialApplicationRemarks,
@@ -119,6 +121,43 @@ export const createEquipmentAction = async (values: z.infer<typeof EquipmentSche
 
     if (result.success) {
       revalidatePath("/dashboard/equipments");
+
+      // Send confirmation email for public registrations
+      try {
+        const equipmentId = result.equipment?.id;
+        if (equipmentId && ownerEmail) {
+          // Send confirmation email with equipment details
+          const ownerName = `${ownerFirstName} ${ownerLastName}`.trim();
+          await sendRegistrationConfirmationEmail(
+            ownerEmail,
+            ownerName,
+            equipmentId,
+            brand,
+            model,
+            serialNumber
+          );
+        }
+      } catch (emailError) {
+        console.error("Error sending confirmation email:", emailError);
+        // Don't fail the registration if email fails
+      }
+
+      // Send email verification for public registrations
+      try {
+        if (ownerEmail && dataPrivacyConsent === true) {
+          // This indicates it's a public registration that needs email verification
+          const verificationToken = await generateEquipmentVerificationToken(ownerEmail);
+          await sendEquipmentVerificationEmail(
+            verificationToken.email,
+            verificationToken.token
+          );
+          return { success: "Registration submitted successfully! Please check your email to verify your address and complete the registration." };
+        }
+      } catch (emailError) {
+        console.error("Error sending verification email:", emailError);
+        // Don't fail the registration if email fails
+      }
+
       return { success: result.message };
     } else {
       return { error: result.message };
@@ -195,6 +234,17 @@ export const updateEquipmentAction = async (
       return { error: "Equipment not found!" };
     }
 
+    const currentEquipment = existingEquipment.equipment;
+    if (!currentEquipment) {
+      return { error: "Equipment data not found!" };
+    }
+
+    // Check for status changes to determine if emails should be sent
+    const statusChanged = {
+      initialApplicationStatus: currentEquipment.initialApplicationStatus !== initialApplicationStatus,
+      inspectionResult: currentEquipment.inspectionResult !== inspectionResult
+    };
+
     const result = await updateEquipment(id, {
       // Owner Information
       ownerFirstName,
@@ -231,7 +281,7 @@ export const updateEquipmentAction = async (
       woodProcessingPermitUrl,
       governmentCertificationUrl,
       // Data Privacy Consent
-      dataPrivacyConsent,
+      dataPrivacyConsent: dataPrivacyConsent ?? false,
       // Application Status and Processing
       initialApplicationStatus,
       initialApplicationRemarks,
@@ -245,6 +295,41 @@ export const updateEquipmentAction = async (
     if (result.success) {
       revalidatePath("/dashboard/equipments");
       revalidatePath(`/dashboard/equipments/${id}`);
+
+      // Send emails only when specific status changes occur
+      try {
+        const ownerName = `${ownerFirstName} ${ownerLastName}`.trim();
+
+        // Send email when initial application status changes to ACCEPTED
+        if (statusChanged.initialApplicationStatus && initialApplicationStatus === "ACCEPTED" && ownerEmail) {
+          await sendApplicationAcceptedEmail(
+            ownerEmail,
+            ownerName,
+            id,
+            brand,
+            model,
+            serialNumber,
+            initialApplicationRemarks
+          );
+        }
+
+        // Send email when inspection result changes to PASSED
+        if (statusChanged.inspectionResult && inspectionResult === "PASSED" && ownerEmail) {
+          await sendInspectionPassedEmail(
+            ownerEmail,
+            ownerName,
+            id,
+            brand,
+            model,
+            serialNumber,
+            inspectionRemarks
+          );
+        }
+      } catch (emailError) {
+        console.error("Error sending status update emails:", emailError);
+        // Don't fail the update if email fails
+      }
+
       return { success: result.message };
     } else {
       return { error: result.message };
@@ -390,7 +475,7 @@ export const bulkImportEquipmentAction = async (equipmentsData: any[]) => {
           woodProcessingPermitUrl,
           governmentCertificationUrl,
           // Data Privacy Consent
-          dataPrivacyConsent,
+          dataPrivacyConsent: dataPrivacyConsent ?? false,
           // Application Status and Processing
           initialApplicationStatus,
           initialApplicationRemarks,

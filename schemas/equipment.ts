@@ -109,9 +109,10 @@ export const EquipmentSchema = z.object({
   governmentCertificationUrl: z.string().optional(),
 
   // Data Privacy Consent
-  dataPrivacyConsent: z.boolean().refine((val) => val === true, {
-    message: "You must agree to the Data Privacy Act consent.",
-  }),
+  dataPrivacyConsent: z.boolean().optional(),
+
+  // Email Verification
+  emailVerified: z.boolean().optional(),
 
   // Application Status and Processing
   initialApplicationStatus: ApplicationStatus.optional(),

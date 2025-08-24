@@ -4,18 +4,27 @@ import { db } from "@/lib/db";
 
 export const getEquipmentStats = async () => {
   try {
-    // Get total count of equipments
-    const totalEquipments = await db.equipment.count();
+    // Get total count of equipments with Accepted Application Status and Passed Inspection Result
+    const totalEquipments = await db.equipment.count({
+      where: {
+        initialApplicationStatus: 'ACCEPTED',
+        inspectionResult: 'PASSED'
+      }
+    });
 
-    // Get equipment count by intended use
+    // Get equipment count by intended use (only Accepted and Passed)
     const equipmentsByUseType = await db.equipment.groupBy({
       by: ['intendedUse'],
+      where: {
+        initialApplicationStatus: 'ACCEPTED',
+        inspectionResult: 'PASSED'
+      },
       _count: {
         id: true,
       },
     });
 
-    // Get equipments created this month
+    // Get equipments created this month (only Accepted and Passed)
     const currentDate = new Date();
     const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
     const equipmentsThisMonth = await db.equipment.count({
@@ -23,10 +32,12 @@ export const getEquipmentStats = async () => {
         createdAt: {
           gte: startOfMonth,
         },
+        initialApplicationStatus: 'ACCEPTED',
+        inspectionResult: 'PASSED'
       },
     });
 
-    // Get last month's count for comparison
+    // Get last month's count for comparison (only Accepted and Passed)
     const startOfLastMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1);
     const endOfLastMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 0);
     const equipmentsLastMonth = await db.equipment.count({
@@ -35,6 +46,8 @@ export const getEquipmentStats = async () => {
           gte: startOfLastMonth,
           lte: endOfLastMonth,
         },
+        initialApplicationStatus: 'ACCEPTED',
+        inspectionResult: 'PASSED'
       },
     });
 
@@ -49,50 +62,66 @@ export const getEquipmentStats = async () => {
     const now = new Date();
     const twoYearsAgo = new Date(now.getTime() - 2 * 365 * 24 * 60 * 60 * 1000);
 
-    // Count expired equipment
+    // Count expired equipment (only Accepted and Passed)
     const expiredEquipments = await db.equipment.count({
       where: {
-        OR: [
-          // New equipment: expired if dateAcquired is more than 2 years ago
+        AND: [
           {
-            isNew: true,
-            dateAcquired: {
-              lt: twoYearsAgo,
-            },
+            initialApplicationStatus: 'ACCEPTED',
+            inspectionResult: 'PASSED'
           },
-          // Renewal equipment: expired if createdAt is more than 2 years ago
           {
-            isNew: false,
-            createdAt: {
-              lt: twoYearsAgo,
-            },
-          },
-        ],
+            OR: [
+              // New equipment: expired if dateAcquired is more than 2 years ago
+              {
+                isNew: true,
+                dateAcquired: {
+                  lt: twoYearsAgo,
+                },
+              },
+              // Renewal equipment: expired if createdAt is more than 2 years ago
+              {
+                isNew: false,
+                createdAt: {
+                  lt: twoYearsAgo,
+                },
+              },
+            ],
+          }
+        ]
       },
     });
 
-    // Equipment expiring in next 30 days
+    // Equipment expiring in next 30 days (only Accepted and Passed)
     const almostTwoYearsAgo = new Date(now.getTime() - (2 * 365 - 30) * 24 * 60 * 60 * 1000);
     const expiringInNext30Days = await db.equipment.count({
       where: {
-        OR: [
-          // New equipment: expiring if dateAcquired is between 2 years and 1 year 11 months ago
+        AND: [
           {
-            isNew: true,
-            dateAcquired: {
-              gte: twoYearsAgo,
-              lte: almostTwoYearsAgo,
-            },
+            initialApplicationStatus: 'ACCEPTED',
+            inspectionResult: 'PASSED'
           },
-          // Renewal equipment: expiring if createdAt is between 2 years and 1 year 11 months ago
           {
-            isNew: false,
-            createdAt: {
-              gte: twoYearsAgo,
-              lte: almostTwoYearsAgo,
-            },
-          },
-        ],
+            OR: [
+              // New equipment: expiring if dateAcquired is between 2 years and 1 year 11 months ago
+              {
+                isNew: true,
+                dateAcquired: {
+                  gte: twoYearsAgo,
+                  lte: almostTwoYearsAgo,
+                },
+              },
+              // Renewal equipment: expiring if createdAt is between 2 years and 1 year 11 months ago
+              {
+                isNew: false,
+                createdAt: {
+                  gte: twoYearsAgo,
+                  lte: almostTwoYearsAgo,
+                },
+              },
+            ],
+          }
+        ]
       },
     });
 
@@ -105,6 +134,8 @@ export const getEquipmentStats = async () => {
         createdAt: {
           gte: sixMonthsAgo,
         },
+        initialApplicationStatus: 'ACCEPTED',
+        inspectionResult: 'PASSED'
       },
       select: {
         createdAt: true,
@@ -153,6 +184,10 @@ export const getEquipmentStats = async () => {
 export const getEquipmentUseTypeData = async () => {
   try {
     const equipments = await db.equipment.findMany({
+      where: {
+        initialApplicationStatus: 'ACCEPTED',
+        inspectionResult: 'PASSED'
+      },
       select: {
         intendedUse: true,
       },

@@ -49,12 +49,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 export default function EquipmentForm({
   initialData,
   pageTitle,
-  showProcessingStatus = true,
+  isPublicRegistration = false,
   noCardWrapper = false
 }: {
   initialData: Equipment | null;
   pageTitle: string;
-  showProcessingStatus?: boolean;
+  isPublicRegistration?: boolean;
   noCardWrapper?: boolean;
 }) {
   const router = useRouter();
@@ -127,12 +127,15 @@ export default function EquipmentForm({
     governmentCertificationUrl: initialData?.governmentCertificationUrl || '',
 
     // Data Privacy Consent
-    dataPrivacyConsent: initialData?.dataPrivacyConsent || false,
+    dataPrivacyConsent: isPublicRegistration ? (initialData?.dataPrivacyConsent || false) : true,
+
+    // Email Verification
+    emailVerified: initialData?.emailVerified || false,
 
     // Application Status and Processing
-    initialApplicationStatus: initialData?.initialApplicationStatus || undefined,
+    initialApplicationStatus: initialData?.initialApplicationStatus || 'PENDING',
     initialApplicationRemarks: initialData?.initialApplicationRemarks || '',
-    inspectionResult: initialData?.inspectionResult || undefined,
+    inspectionResult: initialData?.inspectionResult || 'PENDING',
     inspectionRemarks: initialData?.inspectionRemarks || '',
     orNumber: initialData?.orNumber || '',
     orDate: initialData?.orDate ? new Date(initialData.orDate) : undefined,
@@ -144,9 +147,26 @@ export default function EquipmentForm({
     defaultValues
   });
 
+  // Custom validation for data privacy consent when it's public registration
+  const validateDataPrivacyConsent = (value: boolean) => {
+    if (isPublicRegistration && !value) {
+      return "You must agree to the Data Privacy Act consent.";
+    }
+    return true;
+  };
+
   function onSubmit(values: z.infer<typeof EquipmentSchema>) {
     setError('');
     setSuccess('');
+
+    // Custom validation for data privacy consent
+    if (isPublicRegistration && !values.dataPrivacyConsent) {
+      form.setError('dataPrivacyConsent', {
+        type: 'manual',
+        message: 'You must agree to the Data Privacy Act consent.'
+      });
+      return;
+    }
 
     // Include the uploaded file URLs in the form data
     const formData = {
@@ -164,7 +184,8 @@ export default function EquipmentForm({
       woodProcessingPermitUrl,
       governmentCertificationUrl,
       renewalRegistrationApplicationUrl,
-      renewalPreviousCertificateOfRegistrationUrl
+      renewalPreviousCertificateOfRegistrationUrl,
+      emailVerified: values.emailVerified
     };
 
     startTransition(async () => {
@@ -179,10 +200,15 @@ export default function EquipmentForm({
 
         if (response.success) {
           setSuccess(response.success);
+
           form.reset();
           // Redirect after a short delay to show success message
           setTimeout(() => {
-            router.push('/dashboard/equipments');
+            if (isPublicRegistration) {
+              router.push('/');
+            } else {
+              router.push('/dashboard/equipments');
+            }
             router.refresh();
           }, 1500);
         } else if (response.error) {
@@ -198,6 +224,190 @@ export default function EquipmentForm({
   const formContent = (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
+        {/* Application Status and Processing Section */}
+        {!isPublicRegistration && (
+          <div className='space-y-6'>
+            <h3 className='text-lg font-semibold text-foreground'>Application Status and Processing</h3>
+
+            <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
+              <FormField
+                control={form.control}
+                name='initialApplicationStatus'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Initial Application Status</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select application status' />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="PENDING">Pending</SelectItem>
+                        <SelectItem value="ACCEPTED">Accepted</SelectItem>
+                        <SelectItem value="REJECTED">Rejected</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='inspectionResult'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Inspection Result</FormLabel>
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder='Select inspection result' />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="PENDING">Pending</SelectItem>
+                        <SelectItem value="PASSED">Passed</SelectItem>
+                        <SelectItem value="FAILED">Failed</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+
+            <FormField
+              control={form.control}
+              name='initialApplicationRemarks'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Initial Application Remarks</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder='Enter application remarks'
+                      className='resize-none'
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name='inspectionRemarks'
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Inspection Remarks</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder='Enter inspection remarks'
+                      className='resize-none'
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
+              <FormField
+                control={form.control}
+                name='orNumber'
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>OR Number</FormLabel>
+                    <FormControl>
+                      <Input placeholder='Enter OR number' {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='orDate'
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>OR Date</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name='expiryDate'
+                render={({ field }) => (
+                  <FormItem className="flex flex-col">
+                    <FormLabel>Expiry Date</FormLabel>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <FormControl>
+                          <Button
+                            variant={"outline"}
+                            className={cn(
+                              "w-full pl-3 text-left font-normal",
+                              !field.value && "text-muted-foreground"
+                            )}
+                          >
+                            {field.value ? (
+                              format(field.value, "PPP")
+                            ) : (
+                              <span>Pick a date</span>
+                            )}
+                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                          </Button>
+                        </FormControl>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={field.value}
+                          onSelect={field.onChange}
+                          initialFocus
+                        />
+                      </PopoverContent>
+                    </Popover>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          </div>
+        )}
         {/* Owner Information Section */}
         <div className='space-y-6'>
           <h3 className='text-lg font-semibold text-foreground'>Owner Information</h3>
@@ -1336,184 +1546,45 @@ export default function EquipmentForm({
 
 
 
-        {/* Application Status and Processing Section */}
-        {showProcessingStatus && (
+
+
+        {/* Data Privacy Consent Section - Only for Public Registration */}
+        {isPublicRegistration && (
           <div className='space-y-6'>
-            <h3 className='text-lg font-semibold text-foreground'>Application Status and Processing</h3>
-
-            <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
+            <h3 className='text-lg font-semibold text-foreground'>Data Privacy Act Consent</h3>
+            <div className='rounded-lg border p-4 bg-muted/50'>
+              <p className='text-sm text-muted-foreground mb-4'>
+                Compliance to "Data Privacy Act of 2012".
+              </p>
+              <p className='text-sm mb-4'>
+                In submitting this form I agree to my details being used for the purposes of
+                Chainsaw Registration. The information will only be accessed by DENR Staff. I
+                understand my data will be held securely and will not be distributed to third
+                parties.
+              </p>
               <FormField
                 control={form.control}
-                name='initialApplicationStatus'
+                name='dataPrivacyConsent'
                 render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Initial Application Status</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder='Select application status' />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="PENDING">Pending</SelectItem>
-                        <SelectItem value="ACCEPTED">Accepted</SelectItem>
-                        <SelectItem value="REJECTED">Rejected</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name='inspectionResult'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Inspection Result</FormLabel>
-                    <Select onValueChange={field.onChange} value={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder='Select inspection result' />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        <SelectItem value="PENDING">Pending</SelectItem>
-                        <SelectItem value="PASSED">Passed</SelectItem>
-                        <SelectItem value="FAILED">Failed</SelectItem>
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-
-            <FormField
-              control={form.control}
-              name='initialApplicationRemarks'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Initial Application Remarks</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder='Enter application remarks'
-                      className='resize-none'
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name='inspectionRemarks'
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Inspection Remarks</FormLabel>
-                  <FormControl>
-                    <Textarea
-                      placeholder='Enter inspection remarks'
-                      className='resize-none'
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <div className='grid grid-cols-1 gap-6 md:grid-cols-3'>
-              <FormField
-                control={form.control}
-                name='orNumber'
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>OR Number</FormLabel>
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                     <FormControl>
-                      <Input placeholder='Enter OR number' {...field} />
+                      <Checkbox
+                        checked={field.value || false}
+                        onCheckedChange={(checked) => {
+                          field.onChange(checked);
+                          // Clear any existing validation error when user checks the box
+                          if (checked) {
+                            form.clearErrors('dataPrivacyConsent');
+                          }
+                        }}
+                      />
                     </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name='orDate'
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>OR Date</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name='expiryDate'
-                render={({ field }) => (
-                  <FormItem className="flex flex-col">
-                    <FormLabel>Expiry Date</FormLabel>
-                    <Popover>
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant={"outline"}
-                            className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              format(field.value, "PPP")
-                            ) : (
-                              <span>Pick a date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
-                        <Calendar
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          initialFocus
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
+                    <div className="space-y-1 leading-none">
+                      <FormLabel className="text-sm font-normal">
+                        I agree to the Data Privacy Act consent
+                      </FormLabel>
+                      <FormMessage />
+                    </div>
                   </FormItem>
                 )}
               />
@@ -1521,48 +1592,14 @@ export default function EquipmentForm({
           </div>
         )}
 
-        {/* Data Privacy Consent Section */}
-        <div className='space-y-6'>
-          <h3 className='text-lg font-semibold text-foreground'>Data Privacy Act Consent</h3>
-          <div className='rounded-lg border p-4 bg-muted/50'>
-            <p className='text-sm text-muted-foreground mb-4'>
-              Compliance to "Data Privacy Act of 2012".
-            </p>
-            <p className='text-sm mb-4'>
-              In submitting this form I agree to my details being used for the purposes of
-              Chainsaw Registration. The information will only be accessed by DENR Staff. I
-              understand my data will be held securely and will not be distributed to third
-              parties.
-            </p>
-            <FormField
-              control={form.control}
-              name='dataPrivacyConsent'
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                  <FormControl>
-                    <Checkbox
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                  <div className="space-y-1 leading-none">
-                    <FormLabel className="text-sm font-normal">
-                      I agree to the Data Privacy Act consent
-                    </FormLabel>
-                    <FormMessage />
-                  </div>
-                </FormItem>
-              )}
-            />
-          </div>
-        </div>
-
         <FormError message={error} />
         <FormSuccess message={success} />
 
-        <Button type='submit' disabled={isPending}>
-          {isPending ? 'Saving...' : isEditing ? 'Update Equipment' : 'Register Equipment'}
-        </Button>
+        <div className={`flex ${isPublicRegistration ? 'justify-center' : 'justify-end'}`}>
+          <Button type='submit' disabled={isPending}>
+            {isPending ? 'Saving...' : isEditing ? 'Update Equipment' : isPublicRegistration ? 'Submit' : 'Register Equipment'}
+          </Button>
+        </div>
       </form>
     </Form>
   );

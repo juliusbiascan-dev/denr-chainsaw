@@ -17,7 +17,7 @@ export default async function EquipmentViewPage({
     const data = await getEquipmentById(equipmentId);
     if (data.success && data.equipment) {
       equipment = data.equipment;
-      pageTitle = `Edit Equipment`;
+      pageTitle = `Update Chainsaw Registration`;
     } else {
       notFound();
     }

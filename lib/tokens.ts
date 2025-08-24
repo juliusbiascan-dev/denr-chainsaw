@@ -5,6 +5,7 @@ import { db } from "@/lib/db";
 import { getVerificationTokenByEmail } from "@/data/verificiation-token";
 import { getPasswordResetTokenByEmail } from "@/data/password-reset-token";
 import { getTwoFactorTokenByEmail } from "@/data/two-factor-token";
+import { getEquipmentVerificationTokenByEmail } from "@/data/equipment-verification-token";
 
 export const generateTwoFactorToken = async (email: string) => {
   const token = crypto.randomInt(100_000, 1_000_000).toString();
@@ -77,4 +78,29 @@ export const generateVerificationToken = async (email: string) => {
   });
 
   return verficationToken;
+};
+
+export const generateEquipmentVerificationToken = async (email: string) => {
+  const token = uuidv4();
+  const expires = new Date(new Date().getTime() + 3600 * 1000);
+
+  const existingToken = await getEquipmentVerificationTokenByEmail(email);
+
+  if (existingToken) {
+    await db.equipmentVerificationToken.delete({
+      where: {
+        id: existingToken.id,
+      },
+    });
+  }
+
+  const equipmentVerificationToken = await db.equipmentVerificationToken.create({
+    data: {
+      email,
+      token,
+      expires,
+    }
+  });
+
+  return equipmentVerificationToken;
 };

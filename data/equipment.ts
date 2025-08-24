@@ -294,6 +294,9 @@ export const createEquipment = async (data: {
   // Data Privacy Consent
   dataPrivacyConsent: boolean;
 
+  // Email Verification
+  emailVerified?: boolean;
+
   // Application Status and Processing
   initialApplicationStatus?: "ACCEPTED" | "REJECTED" | "PENDING";
   initialApplicationRemarks?: string;
@@ -361,6 +364,9 @@ export const createEquipment = async (data: {
 
         // Data Privacy Consent
         dataPrivacyConsent: data.dataPrivacyConsent,
+
+        // Email Verification
+        emailVerified: data.emailVerified ?? false,
 
         // Application Status and Processing
         initialApplicationStatus: data.initialApplicationStatus || null,

@@ -215,23 +215,23 @@ export const columns: ColumnDef<Equipment>[] = [
     }
   },
 
-  {
-    id: 'specs',
-    header: 'Technical Specs',
-    cell: ({ row }) => {
-      const equipment = row.original;
-      return (
-        <div className="space-y-1">
-          <div className="text-sm">
-            <span className="font-medium">Guide Bar:</span> {equipment.guidBarLength}″
-          </div>
-          <div className="text-sm">
-            <span className="font-medium">Power:</span> {equipment.horsePower} HP
-          </div>
-        </div>
-      );
-    }
-  },
+  // {
+  //   id: 'specs',
+  //   header: 'Technical Specs',
+  //   cell: ({ row }) => {
+  //     const equipment = row.original;
+  //     return (
+  //       <div className="space-y-1">
+  //         <div className="text-sm">
+  //           <span className="font-medium">Guide Bar:</span> {equipment.guidBarLength}″
+  //         </div>
+  //         <div className="text-sm">
+  //           <span className="font-medium">Power:</span> {equipment.horsePower} HP
+  //         </div>
+  //       </div>
+  //     );
+  //   }
+  // },
   {
     accessorKey: 'dateAcquired',
     header: ({ column }) => (
@@ -252,21 +252,12 @@ export const columns: ColumnDef<Equipment>[] = [
       return <div>{formatDate(date)}</div>;
     }
   },
-  {
-    accessorKey: 'updatedAt',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Last Updated' />
-    ),
-    cell: ({ cell }) => {
-      const date = cell.getValue<string>();
-      return <div>{formatDate(date)}</div>;
-    }
-  },
+
   {
     id: 'status',
     accessorKey: 'status',
     header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Status' />
+      <DataTableColumnHeader column={column} title='Validity' />
     ),
     cell: ({ cell }) => {
       const status = cell.getValue<Equipment['status']>();
@@ -298,6 +289,142 @@ export const columns: ColumnDef<Equipment>[] = [
             </TooltipTrigger>
             <TooltipContent>
               <p>{getStatusDescription(status)}</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
+    }
+  },
+  {
+    id: 'initialApplicationStatus',
+    accessorKey: 'initialApplicationStatus',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='Application Status' />
+    ),
+    cell: ({ cell }) => {
+      const status = cell.getValue<Equipment['initialApplicationStatus']>();
+
+      const getApplicationStatusIcon = () => {
+        switch (status) {
+          case 'ACCEPTED':
+            return <CheckCircle2 className="w-3 h-3 mr-1" />;
+          case 'REJECTED':
+            return <XCircle className="w-3 h-3 mr-1" />;
+          case 'PENDING':
+            return <Clock className="w-3 h-3 mr-1" />;
+          default:
+            return null;
+        }
+      };
+
+      const getApplicationStatusVariant = (status: string | null | undefined) => {
+        switch (status) {
+          case 'ACCEPTED':
+            return 'default';
+          case 'REJECTED':
+            return 'destructive';
+          case 'PENDING':
+            return 'secondary';
+          default:
+            return 'secondary';
+        }
+      };
+
+      const getApplicationStatusLabel = (status: string | null | undefined) => {
+        switch (status) {
+          case 'ACCEPTED':
+            return 'Accepted';
+          case 'REJECTED':
+            return 'Rejected';
+          case 'PENDING':
+            return 'Pending';
+          default:
+            return 'Pending';
+        }
+      };
+
+      return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge
+                variant={getApplicationStatusVariant(status)}
+                className='capitalize cursor-help flex items-center'
+              >
+                {getApplicationStatusIcon()}
+                {getApplicationStatusLabel(status)}
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Initial application review status</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      );
+    }
+  },
+  {
+    id: 'inspectionResult',
+    accessorKey: 'inspectionResult',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='Inspection Result' />
+    ),
+    cell: ({ cell }) => {
+      const result = cell.getValue<Equipment['inspectionResult']>();
+
+      const getInspectionResultIcon = () => {
+        switch (result) {
+          case 'PASSED':
+            return <CheckCircle2 className="w-3 h-3 mr-1" />;
+          case 'FAILED':
+            return <XCircle className="w-3 h-3 mr-1" />;
+          case 'PENDING':
+            return <Clock className="w-3 h-3 mr-1" />;
+          default:
+            return null;
+        }
+      };
+
+      const getInspectionResultVariant = (result: string | null | undefined) => {
+        switch (result) {
+          case 'PASSED':
+            return 'default';
+          case 'FAILED':
+            return 'destructive';
+          case 'PENDING':
+            return 'secondary';
+          default:
+            return 'secondary';
+        }
+      };
+
+      const getInspectionResultLabel = (result: string | null | undefined) => {
+        switch (result) {
+          case 'PASSED':
+            return 'Passed';
+          case 'FAILED':
+            return 'Failed';
+          case 'PENDING':
+            return 'Pending';
+          default:
+            return 'Pending';
+        }
+      };
+
+      return (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Badge
+                variant={getInspectionResultVariant(result)}
+                className='capitalize cursor-help flex items-center'
+              >
+                {getInspectionResultIcon()}
+                {getInspectionResultLabel(result)}
+              </Badge>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>Physical inspection result</p>
             </TooltipContent>
           </Tooltip>
         </TooltipProvider>

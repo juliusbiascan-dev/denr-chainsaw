@@ -104,7 +104,16 @@ export default async function EquipmentListingPage({ }: EquipmentListingPage) {
         woodProcessingPermitUrl: equipment.woodProcessingPermitUrl,
         governmentCertificationUrl: equipment.governmentCertificationUrl,
         // Data Privacy Consent
-        dataPrivacyConsent: equipment.dataPrivacyConsent
+        dataPrivacyConsent: equipment.dataPrivacyConsent,
+
+        // Application Status and Processing
+        initialApplicationStatus: equipment.initialApplicationStatus,
+        initialApplicationRemarks: equipment.initialApplicationRemarks,
+        inspectionResult: equipment.inspectionResult,
+        inspectionRemarks: equipment.inspectionRemarks,
+        orNumber: equipment.orNumber,
+        orDate: equipment.orDate ? new Date(equipment.orDate).toISOString() : undefined,
+        expiryDate: equipment.expiryDate ? new Date(equipment.expiryDate).toISOString() : undefined
       };
     });
 

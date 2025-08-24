@@ -98,7 +98,7 @@ const RegistrationPage = () => {
                   </div>
                 </div>
 
-                <EquipmentForm showProcessingStatus={false} initialData={equipment} pageTitle={pageTitle} />
+                <EquipmentForm isPublicRegistration={true} initialData={equipment} pageTitle={pageTitle} />
               </CardContent>
             </Card>
 

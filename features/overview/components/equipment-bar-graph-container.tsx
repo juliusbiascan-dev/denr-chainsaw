@@ -18,6 +18,8 @@ export async function EquipmentBarGraphContainer() {
         createdAt: {
           gte: sixMonthsAgo,
         },
+        initialApplicationStatus: 'ACCEPTED',
+        inspectionResult: 'PASSED'
       },
       select: {
         createdAt: true,
