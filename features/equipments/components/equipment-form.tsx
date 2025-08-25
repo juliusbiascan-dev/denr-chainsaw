@@ -205,7 +205,8 @@ export default function EquipmentForm({
           // Redirect after a short delay to show success message
           setTimeout(() => {
             if (isPublicRegistration) {
-              router.push('/');
+              // Redirect to OTP verification page for public registration
+              router.push(`/equipments/verify-otp?email=${encodeURIComponent(values.ownerEmail)}`);
             } else {
               router.push('/dashboard/equipments');
             }

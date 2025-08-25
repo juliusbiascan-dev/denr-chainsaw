@@ -155,26 +155,64 @@ export const sendEquipmentVerificationEmail = async (
       <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; border: 1px solid #006400; border-radius: 5px;">
         <div style="text-align: center; margin-bottom: 20px;">
           <h2 style="color: #006400; margin-bottom: 10px;">Department of Environment and Natural Resources</h2>
-          <h3 style="color: #006400; margin-bottom: 5px;">CENRO ALAMINOS</h3>
           <div style="width: 100%; height: 2px; background-color: #006400; margin: 10px 0;"></div>
         </div>
-        <p>Thank you for submitting your chainsaw registration application. To complete your registration, please verify your email address.</p>
+        <p>Thank you for registering your equipment with the DENR System. To complete your registration, please verify your email address.</p>
         <div style="text-align: center; margin: 30px 0;">
           <a href="${confirmLink}" 
-             style="background-color: #006400; 
-                    color: white; 
-                    padding: 12px 24px; 
-                    text-decoration: none; 
-                    border-radius: 4px; 
-                    display: inline-block;">
+             style="background-color: #006400; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold;">
             Verify Email Address
           </a>
         </div>
-        <p style="color: #666; font-size: 14px; margin-top: 20px;">
-          This link will expire in 24 hours for security purposes. Please verify your email to complete your chainsaw registration.
+        <p style="color: #666; font-size: 14px;">
+          If the button doesn't work, you can copy and paste this link into your browser:<br>
+          <a href="${confirmLink}" style="color: #006400;">${confirmLink}</a>
         </p>
-        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #ddd; font-size: 12px; color: #666; text-align: center;">
-          This is an automated message from the DENR Chainsaw Registration System. Please do not reply to this email.
+        <p style="color: #666; font-size: 14px;">
+          This verification link will expire in 1 hour. If you didn't register for equipment, please ignore this email.
+        </p>
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #666; font-size: 12px;">
+          <p>Department of Environment and Natural Resources<br>
+          Equipment Registration System</p>
+        </div>
+      </div>
+    `
+  });
+};
+
+export const sendEquipmentOTPEmail = async (
+  email: string,
+  otp: string,
+  ownerName: string
+) => {
+  await sendEmail({
+    to: email,
+    subject: "DENR - Equipment Registration OTP Verification",
+    html: `
+      <div style="font-family: Arial, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; border: 1px solid #006400; border-radius: 5px;">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <h2 style="color: #006400; margin-bottom: 10px;">Department of Environment and Natural Resources</h2>
+          <div style="width: 100%; height: 2px; background-color: #006400; margin: 10px 0;"></div>
+        </div>
+        <p>Dear ${ownerName},</p>
+        <p>Thank you for registering your equipment with the DENR System. To ensure the security of your registration, please use the following One-Time Password (OTP) to verify your email address:</p>
+        <div style="text-align: center; margin: 30px 0;">
+          <div style="background-color: #f5f5f5; padding: 20px; border-radius: 10px; display: inline-block;">
+            <h1 style="color: #006400; font-size: 32px; letter-spacing: 8px; margin: 0; font-family: monospace;">${otp}</h1>
+          </div>
+        </div>
+        <p><strong>Important:</strong></p>
+        <ul style="color: #666;">
+          <li>This OTP is valid for 5 minutes only</li>
+          <li>Do not share this OTP with anyone</li>
+          <li>Your equipment registration will not be processed until email verification is complete</li>
+        </ul>
+        <p style="color: #666; font-size: 14px;">
+          If you didn't register for equipment, please ignore this email.
+        </p>
+        <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; text-align: center; color: #666; font-size: 12px;">
+          <p>Department of Environment and Natural Resources<br>
+          Equipment Registration System</p>
         </div>
       </div>
     `

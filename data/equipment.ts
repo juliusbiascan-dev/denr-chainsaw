@@ -365,8 +365,8 @@ export const createEquipment = async (data: {
         // Data Privacy Consent
         dataPrivacyConsent: data.dataPrivacyConsent,
 
-        // Email Verification
-        emailVerified: data.emailVerified ?? false,
+        // Email Verification - For public registrations, email must be verified via OTP
+        emailVerified: data.dataPrivacyConsent ? false : (data.emailVerified ?? true),
 
         // Application Status and Processing
         initialApplicationStatus: data.initialApplicationStatus || null,
@@ -586,3 +586,42 @@ export const deleteEquipment = async (id: string) => {
     };
   }
 }
+
+export const canProcessEquipment = async (equipmentId: string) => {
+  try {
+    const equipment = await db.equipment.findUnique({
+      where: { id: equipmentId }
+    });
+
+    if (!equipment) {
+      return {
+        success: false,
+        message: 'Equipment not found',
+        canProcess: false
+      };
+    }
+
+    // For public registrations (dataPrivacyConsent = true), email must be verified
+    if (equipment.dataPrivacyConsent && !equipment.emailVerified) {
+      return {
+        success: true,
+        message: 'Email verification required before processing',
+        canProcess: false,
+        requiresEmailVerification: true
+      };
+    }
+
+    return {
+      success: true,
+      message: 'Equipment can be processed',
+      canProcess: true
+    };
+  } catch (error) {
+    console.error('Error checking equipment processing status:', error);
+    return {
+      success: false,
+      message: 'Failed to check equipment processing status',
+      canProcess: false
+    };
+  }
+};

@@ -4,9 +4,9 @@ import * as z from "zod";
 import { revalidatePath } from "next/cache";
 
 import { EquipmentSchema } from "@/schemas/equipment";
-import { createEquipment, updateEquipment, deleteEquipment, getEquipmentById } from "@/data/equipment";
-import { sendRegistrationConfirmationEmail, sendApplicationAcceptedEmail, sendInspectionPassedEmail, sendEquipmentVerificationEmail } from "@/lib/mail";
-import { generateEquipmentVerificationToken } from '@/lib/tokens';
+import { createEquipment, updateEquipment, deleteEquipment, getEquipmentById, canProcessEquipment } from "@/data/equipment";
+import { sendApplicationAcceptedEmail, sendInspectionPassedEmail, sendEquipmentOTPEmail } from "@/lib/mail";
+import { generateEquipmentOTPToken } from '@/lib/tokens';
 
 export const createEquipmentAction = async (values: z.infer<typeof EquipmentSchema>) => {
   // Validate input
@@ -122,39 +122,21 @@ export const createEquipmentAction = async (values: z.infer<typeof EquipmentSche
     if (result.success) {
       revalidatePath("/dashboard/equipments");
 
-      // Send confirmation email for public registrations
-      try {
-        const equipmentId = result.equipment?.id;
-        if (equipmentId && ownerEmail) {
-          // Send confirmation email with equipment details
-          const ownerName = `${ownerFirstName} ${ownerLastName}`.trim();
-          await sendRegistrationConfirmationEmail(
-            ownerEmail,
-            ownerName,
-            equipmentId,
-            brand,
-            model,
-            serialNumber
-          );
-        }
-      } catch (emailError) {
-        console.error("Error sending confirmation email:", emailError);
-        // Don't fail the registration if email fails
-      }
-
-      // Send email verification for public registrations
+      // Send OTP verification for public registrations
       try {
         if (ownerEmail && dataPrivacyConsent === true) {
           // This indicates it's a public registration that needs email verification
-          const verificationToken = await generateEquipmentVerificationToken(ownerEmail);
-          await sendEquipmentVerificationEmail(
+          const verificationToken = await generateEquipmentOTPToken(ownerEmail);
+          const ownerName = `${ownerFirstName} ${ownerLastName}`.trim();
+          await sendEquipmentOTPEmail(
             verificationToken.email,
-            verificationToken.token
+            verificationToken.token,
+            ownerName
           );
-          return { success: "Registration submitted successfully! Please check your email to verify your address and complete the registration." };
+          return { success: "Registration submitted successfully! Please check your email for the OTP to verify your address and complete the registration." };
         }
       } catch (emailError) {
-        console.error("Error sending verification email:", emailError);
+        console.error("Error sending OTP email:", emailError);
         // Don't fail the registration if email fails
       }
 
@@ -244,6 +226,16 @@ export const updateEquipmentAction = async (
       initialApplicationStatus: currentEquipment.initialApplicationStatus !== initialApplicationStatus,
       inspectionResult: currentEquipment.inspectionResult !== inspectionResult
     };
+
+    // Check if equipment can be processed (email verification for public registrations)
+    const processingCheck = await canProcessEquipment(id);
+    if (!processingCheck.success) {
+      return { error: processingCheck.message };
+    }
+
+    if (!processingCheck.canProcess) {
+      return { error: "Email verification required before processing this equipment registration." };
+    }
 
     const result = await updateEquipment(id, {
       // Owner Information
